@@ -1,3 +1,4 @@
+'use client';
 import React from 'react';
 
 // Placeholder Icon Components (replace with actual icons later)
@@ -61,7 +62,7 @@ const LandingComponent: React.FC = () => {
     { id: 4, name: "Down Payment Drive", progressPercent: 15, progressAmount: "$1500", daysRemaining: 120, participants: 2 },
   ];
 
-  const handleChallengeClick = (id: number) => {
+  const handleChallengeClick = (id: number) => { 
     console.log(`Challenge ${id} clicked`);
     // Navigate to challenge details page
   };
@@ -81,7 +82,7 @@ const LandingComponent: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
       {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-10 bg-[#F9FAFB] shadow-sm flex justify-between items-center p-4 h-[60px]">
+      <header className="z-10 bg-[#F9FAFB] shadow-sm flex justify-between items-center p-4 h-[60px]">
         <h1 className="text-xl font-bold text-[#14213D]">SaveUp</h1>
         <UserIcon className="text-gray-500 cursor-pointer" />
       </header>
@@ -173,3 +174,8 @@ const LandingComponent: React.FC = () => {
 };
 
 export default LandingComponent;
+
+// export default function LandingPage() {
+//   // Note: The `setActiveTab` prop will be removed from the `Features` component itself in the next step.
+//   return <div>Landing Page 1</div>;
+// }

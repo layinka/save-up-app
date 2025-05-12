@@ -1,116 +1,20 @@
 "use client";
 
-import {
-  useMiniKit,
-  useAddFrame,
-  useOpenUrl,
-} from "@coinbase/onchainkit/minikit";
-import {
-  Name,
-  Identity,
-  Address,
-  Avatar,
-  EthBalance,
-} from "@coinbase/onchainkit/identity";
-import {
-  ConnectWallet,
-  Wallet,
-  WalletDropdown,
-  WalletDropdownDisconnect,
-} from "@coinbase/onchainkit/wallet";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { Button } from "./components/DemoComponents";
-import { Icon } from "./components/DemoComponents";
+// Removed MiniKit, Wallet, Identity imports as they are in layout.tsx
+// Removed useEffect, useMemo, useState, useCallback for layout-specific logic
 import { Home } from "./components/DemoComponents";
-import { Features } from "./components/DemoComponents";
+// If you want the new LandingComponent to be the default home page, import it instead:
+// import LandingComponent from "./components/LandingComponent";
 
-export default function App() {
-  const { setFrameReady, isFrameReady, context } = useMiniKit();
-  const [frameAdded, setFrameAdded] = useState(false);
-  const [activeTab, setActiveTab] = useState("home");
+export default function AppPage() {
+  // The activeTab logic and setFrameReady are removed as they are part of the shared layout now.
+  // The openUrl and addFrame hooks might still be needed if specific pages use them directly,
+  // but for now, assuming they were primarily for the layout.
 
-  const addFrame = useAddFrame();
-  const openUrl = useOpenUrl();
+  // If you want LandingComponent to be the default page:
+  // return <LandingComponent />;
 
-  useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
-    }
-  }, [setFrameReady, isFrameReady]);
-
-  const handleAddFrame = useCallback(async () => {
-    const frameAdded = await addFrame();
-    setFrameAdded(Boolean(frameAdded));
-  }, [addFrame]);
-
-  const saveFrameButton = useMemo(() => {
-    if (context && !context.client.added) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAddFrame}
-          className="text-[var(--app-accent)] p-4"
-          icon={<Icon name="plus" size="sm" />}
-        >
-          Save Frame
-        </Button>
-      );
-    }
-
-    if (frameAdded) {
-      return (
-        <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
-          <Icon name="check" size="sm" className="text-[#0052FF]" />
-          <span>Saved</span>
-        </div>
-      );
-    }
-
-    return null;
-  }, [context, frameAdded, handleAddFrame]);
-
-  return (
-    <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
-      <div className="w-full max-w-md mx-auto px-4 py-3">
-        <header className="flex justify-between items-center mb-3 h-11">
-          <div>
-            <div className="flex items-center space-x-2">
-              <Wallet className="z-10">
-                <ConnectWallet>
-                  <Name className="text-inherit" />
-                </ConnectWallet>
-                <WalletDropdown>
-                  <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                    <Avatar />
-                    <Name />
-                    <Address />
-                    <EthBalance />
-                  </Identity>
-                  <WalletDropdownDisconnect />
-                </WalletDropdown>
-              </Wallet>
-            </div>
-          </div>
-          <div>{saveFrameButton}</div>
-        </header>
-
-        <main className="flex-1">
-          {activeTab === "home" && <Home setActiveTab={setActiveTab} />}
-          {activeTab === "features" && <Features setActiveTab={setActiveTab} />}
-        </main>
-
-        <footer className="mt-2 pt-4 flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[var(--ock-text-foreground-muted)] text-xs"
-            onClick={() => openUrl("https://base.org/builders/minikit")}
-          >
-            Built on Base with MiniKit
-          </Button>
-        </footer>
-      </div>
-    </div>
-  );
+  // Otherwise, to keep the previous Home component as the default page content:
+  // Note: The `setActiveTab` prop will be removed from `Home` component later.
+  return <Home />;
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useCallback, useMemo, useState } from "react";
+import Link from 'next/link';
 import { useAccount } from "wagmi";
 import {
   Transaction,
@@ -111,11 +112,9 @@ function Card({
   );
 }
 
-type FeaturesProps = {
-  setActiveTab: (tab: string) => void;
-};
+type FeaturesProps = {};
 
-export function Features({ setActiveTab }: FeaturesProps) {
+export function Features({}: FeaturesProps) {
   return (
     <div className="space-y-6 animate-fade-in">
       <Card title="Key Features">
@@ -145,19 +144,19 @@ export function Features({ setActiveTab }: FeaturesProps) {
             </span>
           </li>
         </ul>
-        <Button variant="outline" onClick={() => setActiveTab("home")}>
-          Back to Home
-        </Button>
+        <Link href="/" passHref>
+          <Button variant="outline">
+            Back to Home
+          </Button>
+        </Link>
       </Card>
     </div>
   );
 }
 
-type HomeProps = {
-  setActiveTab: (tab: string) => void;
-};
+type HomeProps = {};
 
-export function Home({ setActiveTab }: HomeProps) {
+export function Home({}: HomeProps) {
   return (
     <div>
       <div className="flex flex-col h-[calc(88vh-44px)] animate-fade-in items-center justify-between p-6 bg-[#F9FAFB]">
@@ -181,13 +180,14 @@ export function Home({ setActiveTab }: HomeProps) {
 
         {/* CTA Button */}
         <div className="w-full max-w-xs mb-8">
-          <Button
-            className="w-full rounded-xl"
-            onClick={() => setActiveTab("start")} // Replace with your navigation logic
-            icon={<Icon name="arrow-right" size="sm" />}
-          >
-            Get started
-          </Button>
+          <Link href="/features" passHref>
+            <Button
+              className="w-full rounded-xl"
+              icon={<Icon name="arrow-right" size="sm" />}
+            >
+              Get started
+            </Button>
+          </Link>
         </div>
       </div>
 
