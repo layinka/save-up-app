@@ -95,8 +95,6 @@ export default function App() {
           <div>{saveFrameButton}</div>
         </header>
 
-        <div>{activeTab}</div>
-
         <main className="flex-1">
           {activeTab === "home" && <Home setActiveTab={setActiveTab} />}
           {activeTab === "features" && <Features setActiveTab={setActiveTab} />}

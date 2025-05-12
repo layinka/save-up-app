@@ -160,7 +160,7 @@ type HomeProps = {
 export function Home({ setActiveTab }: HomeProps) {
   return (
     <div>
-      <div className="flex flex-col min-h-screen animate-fade-in items-center justify-between p-6 bg-[#F9FAFB]">
+      <div className="flex flex-col h-[calc(88vh-44px)] animate-fade-in items-center justify-between p-6 bg-[#F9FAFB]">
         {/* Robot Icon Placeholder */}
         <div className="mt-16 mb-8">
           {/* Replace this div with your actual robot icon or image */}
@@ -191,23 +191,6 @@ export function Home({ setActiveTab }: HomeProps) {
         </div>
       </div>
 
-      <div className="space-y-6 animate-fade-in">
-        <Card title="My First Mini App">
-          <p className="text-[var(--app-foreground-muted)] mb-4">
-            This is a minimalistic Mini App built with OnchainKit components.
-          </p>
-          <Button
-            onClick={() => setActiveTab("features")}
-            icon={<Icon name="arrow-right" size="sm" />}
-          >
-            Explore Features
-          </Button>
-        </Card>
-
-        <TodoList />
-
-        <TransactionCard />
-      </div>
     </div>
   );
 }
