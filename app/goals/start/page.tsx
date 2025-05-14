@@ -3,8 +3,11 @@
 import { useState } from 'react';
 import { Button } from '../../components/DemoComponents';
 import { SavingsDialog } from '../../components/SavingsDialog';
+import { useMiniKit } from '@coinbase/onchainkit/minikit';
 
 export default function StartGoalPage() {
+  const {context} = useMiniKit();
+ 
   const [amount, setAmount] = useState(100);
   const [duration, setDuration] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,6 +38,11 @@ export default function StartGoalPage() {
         <Button
           className="w-full max-w-sm bg-[#00C896] hover:bg-[#00B085] text-white py-6 rounded-xl text-lg font-semibold shadow-lg"
           onClick={async () => {
+            if (!context?.user?.fid || !context?.user?.username || !context?.user?.displayName || !context?.user?.pfp?.url) {
+              console.error('Missing required user data');
+              return;
+            }
+
             // Create the challenge
             try {
               const response = await fetch('/api/challenges', {
@@ -43,6 +51,10 @@ export default function StartGoalPage() {
                   'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
+                  creatorFid: context?.user?.fid?.toString(),
+                  username: context?.user?.username,
+                  displayName: context?.user?.displayName,
+                  profilePictureUrl: context?.user?.pfpUrl,
                   name: `Save $${amount}`,
                   description: `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`,
                   goalAmount: amount,

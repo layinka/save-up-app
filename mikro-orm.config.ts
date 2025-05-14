@@ -3,8 +3,10 @@ import { PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { ReflectMetadataProvider } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations'; 
 import { Challenge } from './entities/Challenge';
+import { User } from './entities/User';
+import { Participant } from './entities/Participant';
 import dotenv from 'dotenv';
-
+  
 dotenv.config(); // Load environment variables from .env
 
 if (!process.env.DATABASE_URL) {
@@ -13,7 +15,7 @@ if (!process.env.DATABASE_URL) {
 
 const config = {
   metadataProvider: ReflectMetadataProvider,
-  entities: [Challenge],
+  entities: [Challenge, User, Participant],
   discovery: {
     warnWhenNoEntities: true,
     requireEntitiesArray: false,

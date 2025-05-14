@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { validateFrameMessage } from '@/lib/auth';
 import { Challenge } from '@/entities/Challenge';
+import { Participant } from '@/entities/Participant';
 import { getEm, withRequestContext } from '@/lib/db';
 
 export async function GET(
@@ -27,17 +28,19 @@ export async function GET(
         );
       }
 
-      // Get participant details if available
-      const participants = challenge.participants || [];
+      // Get participants from Participant table with their user details
+      const participants = await em.find(Participant, { challengeId: challenge.id }, {
+        populate: ['user']
+      });
       
-      // TODO: Fetch actual participant data from Farcaster API
-      // For now, return mock data for participants
-      const participantsWithDetails = participants.map(fid => ({
-        fid,
-        username: `user${fid}`,
-        displayName: `User ${fid}`,
-        pfpUrl: `https://warpcast.com/~/avatar/user${fid}.jpg`,
-        currentAmount: 0 // TODO: Track individual savings
+      const participantsWithDetails = participants.map(participant => ({
+        fid: participant.userId,
+        username: participant.user.username,
+        displayName: participant.user.displayName,
+        profilePictureUrl: participant.user.profilePictureUrl,
+        amountContributed: participant.amountContributed,
+        pfpUrl: participant.user.profilePictureUrl, // Use the actual profile picture URL
+        currentAmount: participant.amountContributed
       }));
 
       // Return challenge with participant details

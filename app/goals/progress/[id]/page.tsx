@@ -6,13 +6,15 @@ import Image from 'next/image';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { useMiniKit } from '@coinbase/onchainkit/minikit';
+import { InviteLinkDialog } from '@/components/InviteLinkDialog';
+import { ParticipantDetail } from '@/components/ParticipantDetail';
 
 interface Participant {
-  fid: string;
-  username: string;
-  displayName: string;
-  pfpUrl: string;
-  amountSaved: number;
+  fid: number;
+  username?: string;
+  displayName?: string;
+  pfpUrl?: string;
+  currentAmount: number;
 }
 
 interface Challenge {
@@ -27,6 +29,7 @@ interface Challenge {
 export default function ChallengeProgressPage({ params }: { params: { id: string } }) {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
+  const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Participant[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -120,13 +123,21 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
           {challenge.description}
         </h1>
 
-        {/* Invite Button */}
-        <button
-          onClick={() => setIsInviteDialogOpen(true)}
-          className="w-full p-4 mb-8 bg-white rounded-full shadow-lg border-2 border-[#00C896] text-[#333333] font-medium hover:bg-[#00C896] hover:text-white transition-colors duration-200"
-        >
-          Invite friends
-        </button>
+        {/* Invite Buttons */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
+          <button
+            onClick={() => setIsInviteDialogOpen(true)}
+            className="p-4 bg-white rounded-full shadow-lg border-2 border-[#00C896] text-[#333333] font-medium hover:bg-[#00C896] hover:text-white transition-colors duration-200"
+          >
+            Search Friends
+          </button>
+          <button
+            onClick={() => setIsInviteLinkDialogOpen(true)}
+            className="p-4 bg-white rounded-full shadow-lg border-2 border-[#FCA311] text-[#333333] font-medium hover:bg-[#FCA311] hover:text-white transition-colors duration-200"
+          >
+            Share Link
+          </button>
+        </div>
 
         {/* Progress Section */}
         <section className="mb-8 bg-white p-6 rounded-xl shadow-sm">
@@ -162,23 +173,26 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
           {challenge.participants.length > 0 ? (
             <div className="space-y-4">
               {challenge.participants.map((participant) => (
-                <div key={participant.fid} className="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
-                  <Image
-                    src={participant.pfpUrl}
-                    alt={participant.username}
-                    width={40}
-                    height={40}
-                    className="rounded-full"
-                  />
-                  <div>
-                    <p className="font-medium text-[#14213D]">{participant.displayName}</p>
-                    <p className="text-sm text-gray-500">@{participant.username}</p>
+                <div>
+                  <ParticipantDetail key={participant.fid} fid={participant.fid} />
+                  <div key={participant.fid} className="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
+                    <Image
+                      src={participant.pfpUrl ?? ''}
+                      alt={participant.username ?? ''}
+                      width={40}
+                      height={40}
+                      className="rounded-full"
+                    />
+                    <div>
+                      <p className="font-medium text-[#14213D]">{participant.displayName}</p>
+                      <p className="text-sm text-gray-500">@{participant.username}</p>
+                    </div>
+                    {participant.currentAmount > 0 && (
+                      <p className="ml-auto font-semibold text-[#00C896]">
+                        ${participant.currentAmount.toLocaleString()}
+                      </p>
+                    )}
                   </div>
-                  {participant.amountSaved > 0 && (
-                    <p className="ml-auto font-semibold text-[#00C896]">
-                      ${participant.amountSaved.toLocaleString()}
-                    </p>
-                  )}
                 </div>
               ))}
             </div>
@@ -209,7 +223,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
         </div>
       </nav>
 
-      {/* Invite Dialog */}
+      {/* Search Friends Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
         <DialogContent className="bg-[#F9FAFB] sm:max-w-[425px]">
           <DialogHeader>
@@ -230,8 +244,8 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
                 <div key={user.fid} className="flex items-center justify-between p-3 bg-white rounded-lg">
                   <div className="flex items-center space-x-3">
                     <Image
-                      src={user.pfpUrl}
-                      alt={user.username}
+                      src={user.pfpUrl ?? ''}
+                      alt={user.username ?? ''}
                       width={40}
                       height={40}
                       className="rounded-full"
@@ -253,6 +267,14 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Share Link Dialog */}
+      <InviteLinkDialog
+        open={isInviteLinkDialogOpen}
+        onOpenChange={setIsInviteLinkDialogOpen}
+        challengeId={params.id}
+        challengeName={challenge.name}
+      />
     </div>
   );
 }
