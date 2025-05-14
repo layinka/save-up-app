@@ -180,7 +180,7 @@ export function Home({}: HomeProps) {
 
         {/* CTA Button */}
         <div className="w-full max-w-xs mb-8">
-          <Link href="/features" passHref>
+          <Link href="/landing" passHref>
             <Button
               className="w-full rounded-xl"
               icon={<Icon name="arrow-right" size="sm" />}

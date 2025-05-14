@@ -1,181 +1,130 @@
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Placeholder Icon Components (replace with actual icons later)
-const PlaceholderIcon = ({ className = '' }: { className?: string }) => (
-  <svg className={`w-6 h-6 ${className}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-);
-const UserIcon = ({ className = '' }: { className?: string }) => (
-    <svg className={`w-8 h-8 ${className}`} fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd"></path></svg>
-);
-const HomeIcon = ({ className = '' }: { className?: string }) => <PlaceholderIcon className={className} />; // Replace
-const FeedIcon = ({ className = '' }: { className?: string }) => <PlaceholderIcon className={className} />; // Replace
-const WalletIcon = ({ className = '' }: { className?: string }) => <PlaceholderIcon className={className} />; // Replace
-const SettingsIcon = ({ className = '' }: { className?: string }) => <PlaceholderIcon className={className} />; // Replace
+// Import extracted components
+import { LandingHeader } from '../components/LandingHeader';
+import { ChallengesSection } from '../components/ChallengesSection';
+import { QuickActions } from '../components/QuickActions';
+import { YieldBanner } from '../components/YieldBanner';
+import { ActivityFeedPreview } from '../components/ActivityFeedPreview';
+import { BottomNavBar } from '../components/BottomNavBar';
+import { ChallengeCardProps } from '../components/ChallengeCard';
 
-interface ChallengeCardProps {
+// Type definition for the data structure coming from the API (matches db/schema.ts)
+type ChallengeFromAPI = {
+  id: number;
   name: string;
-  progressPercent: number;
-  progressAmount: string;
-  daysRemaining: number;
-  participants: number;
-  onClick: () => void;
-}
-
-const ChallengeCard: React.FC<ChallengeCardProps> = ({
-  name,
-  progressPercent,
-  progressAmount,
-  daysRemaining,
-  participants,
-  onClick
-}) => {
-  return (
-    <div
-      className="bg-white rounded-lg shadow-md p-4 min-w-[250px] flex-shrink-0 cursor-pointer mr-4 last:mr-0 hover:shadow-lg transition-shadow"
-      onClick={onClick}
-    >
-      <h3 className="font-semibold text-md text-[#14213D] mb-2 truncate">{name}</h3>
-      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-        <div
-          className="bg-[#00C896] h-2.5 rounded-full"
-          style={{ width: `${progressPercent}%` }}
-        ></div>
-      </div>
-      <div className="text-xs text-[#333333] mb-2 flex justify-between">
-        <span>{progressPercent}% ({progressAmount})</span>
-        <span>{daysRemaining} days left</span>
-      </div>
-      <div className="text-xs text-gray-500">
-        {participants} participants
-      </div>
-    </div>
-  );
+  description: string | null;
+  goalAmount: number;
+  currentAmount: number;
+  targetDate: string | null; // API will likely send dates as ISO strings
+  participantsCount: number;
+  creatorFid: string | null;
+  createdAt: string;
+  updatedAt: string;
 };
 
-const LandingComponent: React.FC = () => {
-  // Placeholder data
-  const challenges = [
-    { id: 1, name: "Save $100 with Friends", progressPercent: 75, progressAmount: "$75", daysRemaining: 10, participants: 5 },
-    { id: 2, name: "Vacation Fund Challenge", progressPercent: 30, progressAmount: "$300", daysRemaining: 45, participants: 3 },
-    { id: 3, name: "Emergency Fund Boost", progressPercent: 90, progressAmount: "$450", daysRemaining: 5, participants: 8 },
-    { id: 4, name: "Down Payment Drive", progressPercent: 15, progressAmount: "$1500", daysRemaining: 120, participants: 2 },
-  ];
+// Keep the main LandingPage component structure
+const LandingPage: React.FC = () => {
+  // State for challenges, loading, and errors
+  const [challenges, setChallenges] = useState<ChallengeCardProps[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleChallengeClick = (id: number) => { 
+  useEffect(() => {
+    const fetchChallenges = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const response = await fetch('/api/challenges');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data: ChallengeFromAPI[] = await response.json();
+
+        // Transform API data to ChallengeCardProps
+        const transformedChallenges = data.map(transformChallengeData);
+
+        setChallenges(transformedChallenges);
+      } catch (e) {
+        console.error("Failed to fetch challenges:", e);
+        setError(e instanceof Error ? e.message : 'An unknown error occurred');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChallenges();
+  }, []); // Empty dependency array ensures this runs only once on mount
+
+  // State for earned yield (replace with actual data fetching later)
+  const [earnedYield, setEarnedYield] = useState<string>("$12.34");
+
+  // State for active navigation tab
+  const [activeNavTab, setActiveNavTab] = useState('Home');
+
+  // Handlers
+  const handleChallengeClick = (id: string) => {
     console.log(`Challenge ${id} clicked`);
-    // Navigate to challenge details page
+    // TODO: Navigate to challenge details page using the challenge ID (which is now string)
   };
 
   const handleActionClick = (action: string) => {
     console.log(`${action} clicked`);
-    // Handle action
+    // TODO: Handle action (e.g., open modal, navigate)
   };
 
   const handleNavClick = (tab: string) => {
-      console.log(`Navigated to ${tab}`);
-      // Handle navigation
+    console.log(`Navigated to ${tab}`);
+    setActiveNavTab(tab);
+    // TODO: Implement actual navigation if needed (e.g., using Link or router)
   }
 
-  const earnedYield = "$12.34"; // Placeholder
-
   return (
-    <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
-      {/* Fixed Header */}
-      <header className="z-10 bg-[#F9FAFB] shadow-sm flex justify-between items-center p-4 h-[60px]">
-        <h1 className="text-xl font-bold text-[#14213D]">SaveUp</h1>
-        <UserIcon className="text-gray-500 cursor-pointer" />
-      </header>
+    <div className="flex flex-col space-y-6 animate-fade-in bg-[#F9FAFB]">
+      <LandingHeader />
 
-      {/* Main Content Area (scrollable) */}
-      <main className="flex-1 overflow-y-auto pt-[60px] pb-[60px] px-4"> {/* Adjust padding top/bottom for fixed header/nav */}
-        {/* Active Challenges Section */}
-        <section className="my-6">
-          <h2 className="text-lg font-semibold text-[#14213D] mb-3">Your Active Challenges</h2>
-          <div className="flex overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
-            {challenges.map((challenge) => (
-              <ChallengeCard
-                key={challenge.id}
-                name={challenge.name}
-                progressPercent={challenge.progressPercent}
-                progressAmount={challenge.progressAmount}
-                daysRemaining={challenge.daysRemaining}
-                participants={challenge.participants}
-                onClick={() => handleChallengeClick(challenge.id)}
-              />
-            ))}
-            {challenges.length === 0 && <p className="text-gray-500 italic">No active challenges yet.</p>}
-          </div>
-        </section>
-
-        {/* Quick Action Buttons */}
-        <section className="my-6 grid grid-cols-3 gap-3">
-          <button
-            onClick={() => handleActionClick('Start New Goal')}
-            className="bg-[#00C896] text-white py-3 px-2 rounded-lg text-sm font-semibold shadow-md hover:bg-opacity-90 transition-colors"
-          >
-            Start New Goal
-          </button>
-          <button
-            onClick={() => handleActionClick('Join Challenge')}
-            className="bg-white text-[#14213D] border border-gray-300 py-3 px-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            Join Challenge
-          </button>
-          <button
-            onClick={() => handleActionClick('Invite Friends')}
-            className="bg-white text-[#14213D] border border-gray-300 py-3 px-2 rounded-lg text-sm font-semibold shadow-sm hover:bg-gray-50 transition-colors"
-          >
-            Invite Friends
-          </button>
-        </section>
-
-        {/* Optional: Yield Banner */}
-        {earnedYield && (
-           <section className="my-6 p-4 bg-gradient-to-r from-[#00C896] to-[#00A078] rounded-lg shadow text-white text-center">
-              <p className="font-semibold">You’ve earned <span className="font-bold">{earnedYield}</span> in DeFi rewards!</p>
-           </section>
+      {/* Main Content Area (scrollable) - Adjust padding for fixed header/nav */}
+      <main className="flex-1 overflow-y-auto pt-3 px-4"> 
+        {isLoading && <p className="text-center text-[#14213D]">Loading challenges...</p>}
+        {error && <p className="text-center text-red-500">Error loading challenges: {error}</p>}
+        {!isLoading && !error && (
+          <ChallengesSection challenges={challenges} onChallengeClick={handleChallengeClick} />
         )}
-
-        {/* Optional: Social Feed Preview */}
-        <section className="my-6">
-          <h3 className="text-md font-semibold text-[#14213D] mb-2">Activity Feed</h3>
-          <div className="space-y-2 text-sm text-gray-600">
-            <p>Alice saved $50 towards "Vacation Fund".</p>
-            <p>Bob joined the "Emergency Fund Boost" challenge.</p>
-            <p>Charlie invited 3 friends.</p>
-            {/* Add more feed items */}
-          </div>
-        </section>
-
+        <QuickActions onActionClick={handleActionClick} />
+        <YieldBanner earnedYield={earnedYield} />
+        <ActivityFeedPreview />
       </main>
 
-      {/* Fixed Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-10 bg-white border-t border-gray-200 flex justify-around items-center h-[60px]">
-        <button onClick={() => handleNavClick('Home')} className="flex flex-col items-center text-[#00C896]"> {/* Active Tab Example */}
-            <HomeIcon className="w-6 h-6 mb-1"/>
-            <span className="text-xs">Home</span>
-        </button>
-        <button onClick={() => handleNavClick('Feed')} className="flex flex-col items-center text-gray-500 hover:text-[#14213D]">
-            <FeedIcon className="w-6 h-6 mb-1"/>
-            <span className="text-xs">Feed</span>
-        </button>
-        <button onClick={() => handleNavClick('Wallet')} className="flex flex-col items-center text-gray-500 hover:text-[#14213D]">
-            <WalletIcon className="w-6 h-6 mb-1"/>
-            <span className="text-xs">Wallet</span>
-        </button>
-        <button onClick={() => handleNavClick('Settings')} className="flex flex-col items-center text-gray-500 hover:text-[#14213D]">
-            <SettingsIcon className="w-6 h-6 mb-1"/>
-            <span className="text-xs">Settings</span>
-        </button>
-      </nav>
+    
     </div>
   );
 };
 
-export default LandingComponent;
+// Helper function to transform API data to ChallengeCardProps
+const transformChallengeData = (apiChallenge: ChallengeFromAPI): ChallengeCardProps => {
+  const goal = apiChallenge.goalAmount / 100; // Convert cents to dollars
+  const current = apiChallenge.currentAmount / 100; // Convert cents to dollars
+  const progressPercent = goal > 0 ? Math.round((current / goal) * 100) : 0;
+  const progressAmount = `$${current.toFixed(2)}`; // Format as currency string
 
-// export default function LandingPage() {
-//   // Note: The `setActiveTab` prop will be removed from the `Features` component itself in the next step.
-//   return <div>Landing Page 1</div>;
-// }
+  let daysRemaining = 0;
+  if (apiChallenge.targetDate) {
+    const target = new Date(apiChallenge.targetDate);
+    const now = new Date();
+    const diffTime = target.getTime() - now.getTime();
+    daysRemaining = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24))); // Calculate remaining days
+  }
+  
+  return {
+    id: apiChallenge.id.toString(), // Convert numeric ID to string as expected by prop
+    name: apiChallenge.name,
+    progressPercent,
+    progressAmount,
+    daysRemaining,
+    participants: apiChallenge.participantsCount,
+    onClick: () => console.log(`Transformed challenge ${apiChallenge.id} clicked`), // Placeholder onClick
+  };
+};
+
+export default LandingPage;
