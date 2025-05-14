@@ -33,6 +33,7 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
       goalAmount,
       targetDate: targetDate ? new Date(targetDate) : null,
       creatorFid: request.fid?.toString() || '1',
+      participants: [],
     });
 
     await em.flush(); // Save to database
@@ -81,7 +82,5 @@ export async function GET(request: Request) {
 
   const authenticatedRequest = request as AuthenticatedRequest;
   authenticatedRequest.fid = fid;
-
-  console.log('GET /api/challenges -- authenticated with FID:', fid);
   return await withRequestContext(async () => await handleGetChallenges());
 }

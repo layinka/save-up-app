@@ -29,6 +29,9 @@ export class Challenge {
   @Property({ length: 256, nullable: true })
   creatorFid?: string | null; // Farcaster ID
 
+  @Property({ type: 'array' })
+  participants: string[] = [];
+
   @Property()
   createdAt: Date = new Date();
 
