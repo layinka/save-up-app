@@ -35,8 +35,9 @@ export async function getEm() {
  */
 export async function withRequestContext<T>(fn: () => Promise<T>): Promise<T> {
     const currentOrm = await getOrm();
-    // Use RequestContext.create which implicitly handles async operations within the callback
-    return RequestContext.create(currentOrm.em, fn);
+    return RequestContext.create(currentOrm.em, async () => {
+        return await fn();
+    });
 }
 
 // Optional: Pre-connect on server start (can improve cold starts slightly)

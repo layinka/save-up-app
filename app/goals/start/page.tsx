@@ -17,7 +17,7 @@ export default function StartGoalPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
       {/* Main Content */}
-      <main className="flex-1 flex flex-col items-center justify-center p-6">
+      <main className="flex-1 flex flex-col items-center  justify-center p-6">
         {/* Headline */}
         <h1 className="text-3xl font-bold text-[#14213D] mb-12">
           Set a savings goal

@@ -1,9 +1,9 @@
 import { Options } from '@mikro-orm/core';
 import { PostgreSqlDriver } from '@mikro-orm/postgresql';
-import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
+import { ReflectMetadataProvider } from '@mikro-orm/core';
 import { Migrator } from '@mikro-orm/migrations'; 
 import { Challenge } from './entities/Challenge';
-import * as dotenv from 'dotenv';
+import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables from .env
 
@@ -12,11 +12,12 @@ if (!process.env.DATABASE_URL) {
 } 
 
 const config = {
-  metadataProvider: TsMorphMetadataProvider,
+  metadataProvider: ReflectMetadataProvider,
   entities: [Challenge],
   discovery: {
     warnWhenNoEntities: true,
-    requireEntitiesArray: true,
+    requireEntitiesArray: false,
+    disableDiscovery: false,
   },
   dbName: 'saveup_challenges', // Logical name, or extract from DATABASE_URL if needed
   driver: PostgreSqlDriver,

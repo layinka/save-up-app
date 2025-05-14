@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { Message } from '@farcaster/core';
 import { getSSLHubRpcClient } from '@farcaster/hub-nodejs';
+// Development mode constants
+const isDev = process.env.NODE_ENV === 'development';
+const DEV_FID = '1'; // Default FID for development
 
 const HUB_URL = process.env.FARCASTER_HUB_URL || 'nemes.farcaster.xyz:2283';
 
@@ -9,6 +12,13 @@ export interface AuthenticatedRequest extends Request {
 }
 
 export async function validateFrameMessage(request: Request): Promise<{ isValid: boolean; fid?: number }> {
+  // In development mode, always return success with a test FID
+  if (isDev) {
+    const devFid = parseInt(process.env.DEV_FID || DEV_FID);
+    console.log('🔧 Development mode: Using test FID:', devFid);
+    return { isValid: true, fid: devFid };
+  }
+  
   try {
     const frameTrustedData = request.headers.get('fc-frame');
     if (!frameTrustedData) {
@@ -35,8 +45,8 @@ export async function validateFrameMessage(request: Request): Promise<{ isValid:
   }
 }
 
-export async function withFarcasterAuth(handler: (request: AuthenticatedRequest) => Promise<Response>) {
-  return async (request: Request) => {
+export function withFarcasterAuth(handler: (request: AuthenticatedRequest) => Promise<Response>) {
+  return async function GET(request: Request) {
     const { isValid, fid } = await validateFrameMessage(request);
     
     if (!isValid || !fid) {

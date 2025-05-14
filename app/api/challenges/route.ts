@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { Challenge } from '@/entities/Challenge';
 import { getEm, withRequestContext } from '@/lib/db';
-import { withFarcasterAuth, AuthenticatedRequest } from '@/lib/auth';
+import { validateFrameMessage, AuthenticatedRequest } from '@/lib/auth';
 
 // Zod schema for validating the request body (can remain largely the same)
 const createChallengeSchema = z.object({
@@ -13,60 +13,75 @@ const createChallengeSchema = z.object({
   creatorFid: z.string().optional(),
 });
 
-export const POST = withFarcasterAuth(async (request: AuthenticatedRequest) => {
-  // Wrap the handler logic in withRequestContext
-  return withRequestContext(async () => {
-    const em = await getEm(); // Get the EntityManager
-    try {
-      const body = await request.json();
+async function handleCreateChallenge(request: AuthenticatedRequest) {
+  const em = await getEm(); // Get the EntityManager
+  try {
+    const body = await request.json();
 
-      // Validate request body
-      const validationResult = createChallengeSchema.safeParse(body);
-      if (!validationResult.success) {
-        return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
-      }
-
-      const { name, description, goalAmount, targetDate } = validationResult.data;
-
-      // Create a new Challenge entity instance with authenticated user's FID
-      const newChallenge = em.create(Challenge, {
-        name,
-        description: description ?? null, // Ensure null if undefined
-        goalAmount,
-        targetDate: targetDate ? new Date(targetDate) : null,
-        creatorFid: request.fid?.toString() || '1',
-        // currentAmount, participantsCount, createdAt, updatedAt have defaults or onUpdate
-      });
-
-      // Persist the new entity to the database
-      await em.persistAndFlush(newChallenge);
-
-      return NextResponse.json(newChallenge, { status: 201 }); // Return the created challenge
-
-    } catch (error) {
-      console.error("Error creating challenge:", error);
-      if (error instanceof z.ZodError) {
-          return NextResponse.json({ error: 'Invalid input', details: error.flatten() }, { status: 400 });
-      }
-      return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    // Validate request body
+    const validationResult = createChallengeSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
     }
-  });
-});
+
+    const { name, description, goalAmount, targetDate } = validationResult.data;
+
+    // Create a new Challenge entity instance with authenticated user's FID
+    const newChallenge = em.create(Challenge, {
+      name,
+      description: description ?? null, // Ensure null if undefined
+      goalAmount,
+      targetDate: targetDate ? new Date(targetDate) : null,
+      creatorFid: request.fid?.toString() || '1',
+    });
+
+    await em.flush(); // Save to database
+    return NextResponse.json(newChallenge, { status: 201 }); // Return the created challenge
+  } catch (error) {
+    console.error('Error creating challenge:', error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid input', details: error.flatten() }, { status: 400 });
+    }
+    return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  const { isValid, fid } = await validateFrameMessage(request);
+  
+  if (!isValid || !fid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const authenticatedRequest = request as AuthenticatedRequest;
+  authenticatedRequest.fid = fid;
+
+  return await withRequestContext(async () => await handleCreateChallenge(authenticatedRequest));
+}
 
 // --- GET Handler --- 
-export const GET = withFarcasterAuth(async (request: AuthenticatedRequest) => {
-  // Wrap the handler logic in withRequestContext
-  return withRequestContext(async () => {
-    const em = await getEm(); // Get the EntityManager
-    try {
-      // Fetch all challenges from the database
-      const allChallenges = await em.find(Challenge, {}, { orderBy: { createdAt: 'ASC' } });
+async function handleGetChallenges() {
+  const em = await getEm(); // Get the EntityManager
+  try {
+    // Fetch all challenges from the database
+    const allChallenges = await em.find(Challenge, {}, { orderBy: { createdAt: 'ASC' } });
+    return NextResponse.json(allChallenges);
+  } catch (error) {
+    console.error('Error fetching challenges:', error);
+    return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+  }
+}
 
-      return NextResponse.json(allChallenges);
+export async function GET(request: Request) {
+  const { isValid, fid } = await validateFrameMessage(request);
+  
+  if (!isValid || !fid) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
-    } catch (error) {
-      console.error("Error fetching challenges:", error);
-      return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
-    }
-  });
-});
+  const authenticatedRequest = request as AuthenticatedRequest;
+  authenticatedRequest.fid = fid;
+
+  console.log('GET /api/challenges -- authenticated with FID:', fid);
+  return await withRequestContext(async () => await handleGetChallenges());
+}
