@@ -1,18 +1,19 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { Challenge } from '@/entities/Challenge'; // Import the MikroORM entity
-import { getEm, withRequestContext } from '@/lib/db'; // Import MikroORM helpers
+import { Challenge } from '@/entities/Challenge';
+import { getEm, withRequestContext } from '@/lib/db';
+import { withFarcasterAuth, AuthenticatedRequest } from '@/lib/auth';
 
 // Zod schema for validating the request body (can remain largely the same)
 const createChallengeSchema = z.object({
   name: z.string().min(3, { message: "Challenge name must be at least 3 characters long" }).max(256),
   description: z.string().optional(),
-  goalAmount: z.number().int().positive({ message: "Goal amount must be a positive integer (in cents)" }),
+  goalAmount: z.number().int().positive({ message: "Goal amount must be a positive integer" }),
   targetDate: z.string().datetime().optional(), // Expect ISO 8601 string
   creatorFid: z.string().optional(),
 });
 
-export async function POST(request: Request) {
+export const POST = withFarcasterAuth(async (request: AuthenticatedRequest) => {
   // Wrap the handler logic in withRequestContext
   return withRequestContext(async () => {
     const em = await getEm(); // Get the EntityManager
@@ -25,15 +26,15 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
       }
 
-      const { name, description, goalAmount, targetDate, creatorFid } = validationResult.data;
+      const { name, description, goalAmount, targetDate } = validationResult.data;
 
-      // Create a new Challenge entity instance
+      // Create a new Challenge entity instance with authenticated user's FID
       const newChallenge = em.create(Challenge, {
         name,
         description: description ?? null, // Ensure null if undefined
         goalAmount,
         targetDate: targetDate ? new Date(targetDate) : null,
-        creatorFid: creatorFid ?? null,
+        creatorFid: request.fid?.toString() || '1',
         // currentAmount, participantsCount, createdAt, updatedAt have defaults or onUpdate
       });
 
@@ -50,10 +51,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
   });
-}
+});
 
 // --- GET Handler --- 
-export async function GET(request: Request) {
+export const GET = withFarcasterAuth(async (request: AuthenticatedRequest) => {
   // Wrap the handler logic in withRequestContext
   return withRequestContext(async () => {
     const em = await getEm(); // Get the EntityManager
@@ -68,4 +69,4 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
     }
   });
-}
+});

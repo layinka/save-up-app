@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode, useCallback, useMemo, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState, useEffect } from "react";
+import { useMiniKit } from '@coinbase/onchainkit/minikit';
 import Link from 'next/link';
 import { useAccount } from "wagmi";
 import {
@@ -157,18 +158,46 @@ export function Features({}: FeaturesProps) {
 type HomeProps = {};
 
 export function Home({}: HomeProps) {
+  const { setFrameReady, isFrameReady, context } = useMiniKit();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Initialize frame when component is ready
+  useEffect(() => {
+    if (!isFrameReady) {
+      setFrameReady();
+    }
+  }, [setFrameReady, isFrameReady]);
+
+  // Check authentication status when context changes
+  useEffect(() => {
+    // In Frames, users are already authenticated through Farcaster
+    setIsAuthenticated(isFrameReady);
+  }, [isFrameReady]);
+
   return (
     <div>
       <div className="flex flex-col h-[calc(88vh-44px)] animate-fade-in items-center justify-between p-6 bg-[#F9FAFB]">
-        {/* Robot Icon Placeholder */}
-        <div className="mt-16 mb-8">
-          {/* Replace this div with your actual robot icon or image */}
-          <div className="w-24 h-24 bg-gray-300 rounded-full flex items-center justify-center">
-            <span className="text-4xl">🤖</span> {/* Example emoji placeholder */}
-          </div>
+        {/* User Profile Section */}
+        <div className="mt-16 mb-8 text-center">
+          {isFrameReady ? (
+            <div className="space-y-4">
+              <div className="w-24 h-24 bg-[#00C896] rounded-full flex items-center justify-center mx-auto">
+                <span className="text-4xl">💰</span>
+              </div>
+              <div className="text-[#333333]">
+                <p className="font-bold">Welcome back!</p>
+                <p className="text-sm text-[#14213D]">Ready to start saving with friends?</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto animate-pulse">
+                <span className="text-4xl">🔄</span>
+              </div>
+              <p className="text-sm text-[#14213D]">Connecting to Farcaster...</p>
+            </div>
+          )}
         </div>
-
-        {/* Headline & Subheadline */}
         <div className="text-center">
           <h1 className="text-4xl font-bold text-[#14213D] text-[var(--app-foreground-muted)] mb-3">
             Welcome to SaveUP
