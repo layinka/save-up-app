@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { User } from '@/entities/User';
 import { getEm, withRequestContext } from '@/lib/db';
+import { Participant } from '@/entities/Participant';
 
 export async function GET(
   request: NextRequest,
@@ -24,16 +25,17 @@ export async function GET(
       }
 
       // Get challenges where user is either a participant or creator
-      const challengesAsParticipant = await em.count('Challenge', {
-        participants: { id: userId }
+      const challengesAsParticipant = await em.count(Participant, {
+        user: { id: userId }
       });
 
-      const challengesAsCreator = await em.count('Challenge', {
-        creator: { id: userId }
-      });
+      // const challengesAsCreator = await em.count(Participant, {
+      //   user: { id: userId },
+        
+      // });
 
       // Total number of unique challenges
-      const totalChallenges = challengesAsParticipant + challengesAsCreator;
+      const totalChallenges = challengesAsParticipant ; //+ challengesAsCreator;
 
       return NextResponse.json({
         id: user.id,

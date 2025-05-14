@@ -9,9 +9,9 @@ import { validateFrameMessage, AuthenticatedRequest } from '@/lib/auth';
 // Zod schema for validating the request body (can remain largely the same)
 const createChallengeSchema = z.object({
   // User fields
-  username: z.string(),
-  displayName: z.string(),
-  profilePictureUrl: z.string(),
+  username: z.string().optional(),
+  displayName: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
   // Challenge fields
   name: z.string().min(3, { message: "Challenge name must be at least 3 characters long" }).max(256),
   description: z.string().optional(),
@@ -31,8 +31,8 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
       return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
     }
 
-    const { name, description, goalAmount, targetDate, creatorFid, username, displayName, profilePictureUrl } = validationResult.data;
-
+    const { name, description, goalAmount, targetDate,  username, displayName, profilePictureUrl } = validationResult.data;
+    const creatorFid=request.fid;
     if (!creatorFid) {
       return NextResponse.json({ error: 'Creator FID is required' }, { status: 400 });
     }
@@ -41,7 +41,7 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
     let user = await em.findOne(User, { id: Number(creatorFid) });
     
     if (!user) {
-      user = new User(Number(creatorFid), username, displayName, profilePictureUrl);
+      user = new User(Number(creatorFid), username ?? '', displayName ?? '', profilePictureUrl ?? '');
       em.persist(user);
     }
 
@@ -51,15 +51,14 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
       description: description ?? null, // Ensure null if undefined
       goalAmount,
       targetDate: targetDate ? new Date(targetDate) : null,
-      creatorId: Number(creatorFid),
       creator: user,
       totalAmountContributed: 0
     });
 
     // Create participant entry for creator
     const participant = em.create(Participant, {
-      userId: Number(creatorFid),
-      challengeId: challenge.id,
+      // userId: Number(creatorFid),
+      // challengeId: challenge.id,
       user,
       challenge,
       amountContributed: 0,
@@ -98,7 +97,7 @@ async function handleGetChallenges(userId: number) {
   const em = await getEm(); // Get the EntityManager
   try {
     // Find all participants entries for this user
-    const participants = await em.find(Participant, { userId }, {
+    const participants = await em.find(Participant, { user: { id: userId } }, {
       populate: ['challenge']
     });
 

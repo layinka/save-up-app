@@ -29,12 +29,17 @@ export async function GET(
       }
 
       // Get participants from Participant table with their user details
-      const participants = await em.find(Participant, { challengeId: challenge.id }, {
-        populate: ['user']
-      });
+      const participants = await em.find(Participant, {
+          challenge: {
+            id: challenge.id
+          } 
+        }, 
+        {
+          populate: ['user']
+        });
       
       const participantsWithDetails = participants.map(participant => ({
-        fid: participant.userId,
+        fid: participant.user.id,
         username: participant.user.username,
         displayName: participant.user.displayName,
         profilePictureUrl: participant.user.profilePictureUrl,

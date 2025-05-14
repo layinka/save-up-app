@@ -4,3 +4,8 @@ import { twMerge } from "tailwind-merge"
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+
+export function getDefaultAvatarImage(seed: any){
+  return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
+}

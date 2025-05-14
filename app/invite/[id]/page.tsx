@@ -4,7 +4,9 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/DemoComponents';
-import { useMiniKit } from '@coinbase/onchainkit/minikit';
+import { useMiniKit, useViewProfile } from '@coinbase/onchainkit/minikit';
+import { getDefaultAvatarImage } from '@/lib/utils';
+import { ParticipantDetail } from '@/components/ParticipantDetail';
 
 interface Participant {
   fid: string;
@@ -29,9 +31,10 @@ export default function InvitePage({ params }: { params: { id: string } }) {
   const [isLoading, setIsLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
-  const miniKit = useMiniKit();
-  const isConnected = Boolean(miniKit);
-  const user = miniKit as unknown as { fid: string } | undefined;
+  const {context} = useMiniKit();
+  
+  
+  const viewProfile = useViewProfile();
 
   useEffect(() => {
     const fetchChallenge = async () => {
@@ -53,14 +56,21 @@ export default function InvitePage({ params }: { params: { id: string } }) {
   }, [params.id]);
 
   const handleJoinChallenge = async () => {
-    if (!challenge || !user?.fid) return;
+    if (!challenge || !context?.user?.fid) return;
 
     setIsJoining(true);
     try {
       const response = await fetch(`/api/challenges/${challenge.id}/participants`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fid: user.fid.toString() }),
+        body: JSON.stringify({ 
+          fid: context.user.fid.toString(),
+          username: context.user.username,
+          displayName: context.user.displayName,
+          profilePictureUrl: context.user.pfpUrl,
+          
+        
+        }),
       });
 
       if (!response.ok) throw new Error('Failed to join challenge');
@@ -106,8 +116,8 @@ export default function InvitePage({ params }: { params: { id: string } }) {
           <div className="flex items-center gap-4 p-4 bg-[#F9FAFB] rounded-lg mb-6">
             <div className="flex-shrink-0">
               {inviter && (
-                <Image
-                  src={inviter.pfpUrl}
+                <img
+                  src={inviter.pfpUrl?? getDefaultAvatarImage(inviter.fid) }
                   alt={inviter.displayName}
                   width={48}
                   height={48}
@@ -118,7 +128,7 @@ export default function InvitePage({ params }: { params: { id: string } }) {
             <div>
               <p className="text-sm text-[#14213D]">Invited by</p>
               <p className="font-semibold text-[#14213D]">
-                {inviter ? inviter.displayName : 'Unknown'}
+                {inviter ? inviter.displayName : 'Unknown Friend'}
               </p>
             </div>
           </div>
@@ -130,12 +140,12 @@ export default function InvitePage({ params }: { params: { id: string } }) {
           </div>
           <Button
             onClick={handleJoinChallenge}
-            disabled={isJoining || !isConnected}
+            disabled={isJoining || !context?.user?.fid}
             className="w-full bg-[#00C896] hover:bg-[#00B085] text-white py-4 rounded-xl text-lg font-semibold disabled:opacity-50"
           >
             {isJoining ? 'Joining...' : 'Accept Challenge'}
           </Button>
-          {!isConnected && (
+          {!context?.user?.fid && (
             <p className="text-sm text-[#FF6B6B] mt-2 text-center">
               Please connect your Farcaster account to join
             </p>
@@ -149,31 +159,36 @@ export default function InvitePage({ params }: { params: { id: string } }) {
           </h2>
           <div className="space-y-4">
             {challenge.participants.map((participant) => (
-              <div
+              <ParticipantDetail
                 key={participant.fid}
-                className="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg"
-              >
-                <Image
-                  src={participant.pfpUrl}
-                  alt={participant.username}
-                  width={40}
-                  height={40}
-                  className="rounded-full"
-                />
-                <div>
-                  <p className="font-medium text-[#14213D]">
-                    {participant.displayName}
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    @{participant.username}
-                  </p>
-                </div>
-                {participant.currentAmount > 0 && (
-                  <p className="ml-auto font-semibold text-[#00C896]">
-                    ${participant.currentAmount.toLocaleString()}
-                  </p>
-                )}
-              </div>
+                fid={Number(participant.fid)}
+                currentAmount={participant.currentAmount}
+              />
+              // <div
+              //   key={participant.fid}
+              //   className="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg"
+              // >
+              //   <img
+              //     src={participant.pfpUrl?? getDefaultAvatarImage(participant.fid) }
+              //     alt={participant.username}
+              //     width={40}
+              //     height={40}
+              //     className="rounded-full"
+              //   />
+              //   <div>
+              //     <p className="font-medium text-[#14213D]">
+              //       {participant.displayName}
+              //     </p>
+              //     <p className="text-sm text-gray-500">
+              //       @{participant.username}
+              //     </p>
+              //   </div>
+                
+              //   <p className="ml-auto font-semibold text-[#00C896]">
+              //     ${participant.currentAmount.toLocaleString()}
+              //   </p>
+                
+              // </div>
             ))}
           </div>
         </div>

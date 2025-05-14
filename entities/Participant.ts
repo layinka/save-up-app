@@ -4,17 +4,12 @@ import { Challenge } from './Challenge';
 
 @Entity()
 export class Participant {
-  @PrimaryKey()
-  userId!: number; // This will be the Farcaster FID
-
-  @PrimaryKey()
-  challengeId!: number;
-
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, { primary: true })
   user!: User;
 
-  @ManyToOne(() => Challenge)
+  @ManyToOne(() => Challenge, { primary: true })
   challenge!: Challenge;
+
 
   @Property({ type: types.decimal })
   amountContributed: number = 0;
@@ -25,13 +20,14 @@ export class Participant {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
+
   constructor(
-    userId: number,
-    challengeId: number,
+    // user: User,
+    // challenge: Challenge,
     amountContributed: number = 0
   ) {
-    this.userId = userId;
-    this.challengeId = challengeId;
+    // this.user = user;
+    // this.challenge = challenge;
     this.amountContributed = amountContributed;
   }
 }

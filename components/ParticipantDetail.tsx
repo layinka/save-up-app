@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useViewProfile } from '@coinbase/onchainkit/minikit';
+import { useState, useEffect } from 'react';
+import { getDefaultAvatarImage } from '@/lib/utils';
 
-interface User {
+
+export interface User {
   id: number;
   username: string;
   displayName: string;
@@ -12,11 +14,15 @@ interface User {
   updatedAt: string;
 }
 
-interface ParticipantDetailProps {
+export interface ParticipantDetailProps {
   fid: number;
+  currentAmount: number;
 }
 
-export function ParticipantDetail({ fid }: ParticipantDetailProps) {
+
+
+
+export function ParticipantDetail({ fid, currentAmount }: ParticipantDetailProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -63,23 +69,22 @@ export function ParticipantDetail({ fid }: ParticipantDetailProps) {
     );
   }
 
-  const defaultAvatar = 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + user.username;
+  const defaultAvatar = getDefaultAvatarImage (user.id); // 'https://api.dicebear.com/7.x/avataaars/svg?seed=' + (user.id);
 
   return (
     <div className="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-start space-x-4">
         {/* Avatar */}
-        <div 
-          onClick={() => viewProfile()}
+        <div
+          onClick={() => viewProfile(fid)}
           className="cursor-pointer transform hover:scale-105 transition-transform"
         >
-          <Image
+          <img
             src={user.profilePictureUrl || defaultAvatar}
             alt={user.displayName}
             width={48}
             height={48}
-            className="rounded-full"
-          />
+            className="rounded-full" />
         </div>
 
         {/* User Info */}
@@ -92,6 +97,9 @@ export function ParticipantDetail({ fid }: ParticipantDetailProps) {
           {/* Stats */}
           <div className="mt-2 flex items-center space-x-3">
             <div className="flex items-center space-x-1">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00C896]/10 text-[#00C896]">
+                ${currentAmount.toLocaleString()}
+              </span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-[#00C896]/10 text-[#00C896]">
                 {user.totalChallenges} Challenge{user.totalChallenges !== 1 ? 's' : ''}
               </span>
@@ -110,3 +118,4 @@ export function ParticipantDetail({ fid }: ParticipantDetailProps) {
     </div>
   );
 }
+

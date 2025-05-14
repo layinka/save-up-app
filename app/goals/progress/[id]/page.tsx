@@ -173,26 +173,9 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
           {challenge.participants.length > 0 ? (
             <div className="space-y-4">
               {challenge.participants.map((participant) => (
-                <div>
-                  <ParticipantDetail key={participant.fid} fid={participant.fid} />
-                  <div key={participant.fid} className="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg">
-                    <Image
-                      src={participant.pfpUrl ?? ''}
-                      alt={participant.username ?? ''}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
-                    <div>
-                      <p className="font-medium text-[#14213D]">{participant.displayName}</p>
-                      <p className="text-sm text-gray-500">@{participant.username}</p>
-                    </div>
-                    {participant.currentAmount > 0 && (
-                      <p className="ml-auto font-semibold text-[#00C896]">
-                        ${participant.currentAmount.toLocaleString()}
-                      </p>
-                    )}
-                  </div>
+                <div key={participant.fid} >
+                  <ParticipantDetail key={participant.fid} fid={participant.fid} currentAmount={participant.currentAmount}  />
+                  
                 </div>
               ))}
             </div>

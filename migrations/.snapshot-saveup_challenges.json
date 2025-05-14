@@ -15,6 +15,86 @@
           "nullable": false,
           "mappedType": "integer"
         },
+        "username": {
+          "name": "username",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "display_name": {
+          "name": "display_name",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "profile_picture_url": {
+          "name": "profile_picture_url",
+          "type": "varchar(255)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 255,
+          "mappedType": "string"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        }
+      },
+      "name": "user",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "user_pkey",
+          "columnNames": [
+            "id"
+          ],
+          "composite": false,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {},
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "unsigned": false,
+          "autoincrement": true,
+          "primary": true,
+          "nullable": false,
+          "mappedType": "integer"
+        },
         "name": {
           "name": "name",
           "type": "varchar(256)",
@@ -67,25 +147,26 @@
           "length": 6,
           "mappedType": "datetime"
         },
-        "participants_count": {
-          "name": "participants_count",
+        "creator_id": {
+          "name": "creator_id",
           "type": "int",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
           "nullable": false,
-          "default": "0",
           "mappedType": "integer"
         },
-        "creator_fid": {
-          "name": "creator_fid",
-          "type": "varchar(256)",
+        "total_amount_contributed": {
+          "name": "total_amount_contributed",
+          "type": "numeric(10,0)",
           "unsigned": false,
           "autoincrement": false,
           "primary": false,
-          "nullable": true,
-          "length": 256,
-          "mappedType": "string"
+          "nullable": false,
+          "precision": 10,
+          "scale": 0,
+          "default": "0",
+          "mappedType": "decimal"
         },
         "created_at": {
           "name": "created_at",
@@ -123,7 +204,117 @@
         }
       ],
       "checks": [],
-      "foreignKeys": {},
+      "foreignKeys": {
+        "challenges_creator_id_foreign": {
+          "constraintName": "challenges_creator_id_foreign",
+          "columnNames": [
+            "creator_id"
+          ],
+          "localTableName": "public.challenges",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
+          "updateRule": "cascade"
+        }
+      },
+      "nativeEnums": {}
+    },
+    {
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "challenge_id": {
+          "name": "challenge_id",
+          "type": "int",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "mappedType": "integer"
+        },
+        "amount_contributed": {
+          "name": "amount_contributed",
+          "type": "numeric(10,0)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "precision": 10,
+          "scale": 0,
+          "default": "0",
+          "mappedType": "decimal"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": false,
+          "length": 6,
+          "mappedType": "datetime"
+        }
+      },
+      "name": "participant",
+      "schema": "public",
+      "indexes": [
+        {
+          "keyName": "participant_pkey",
+          "columnNames": [
+            "user_id",
+            "challenge_id"
+          ],
+          "composite": true,
+          "constraint": true,
+          "primary": true,
+          "unique": true
+        }
+      ],
+      "checks": [],
+      "foreignKeys": {
+        "participant_user_id_foreign": {
+          "constraintName": "participant_user_id_foreign",
+          "columnNames": [
+            "user_id"
+          ],
+          "localTableName": "public.participant",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.user",
+          "updateRule": "cascade"
+        },
+        "participant_challenge_id_foreign": {
+          "constraintName": "participant_challenge_id_foreign",
+          "columnNames": [
+            "challenge_id"
+          ],
+          "localTableName": "public.participant",
+          "referencedColumnNames": [
+            "id"
+          ],
+          "referencedTableName": "public.challenges",
+          "updateRule": "cascade"
+        }
+      },
       "nativeEnums": {}
     }
   ],

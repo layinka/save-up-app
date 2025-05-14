@@ -8,9 +8,9 @@ import { z } from 'zod';
 
 const addParticipantSchema = z.object({
   fid: z.number(),
-  username: z.string(),
-  displayName: z.string(),
-  profilePictureUrl: z.string(),
+  username: z.string().optional(),
+  displayName: z.string().optional(),
+  profilePictureUrl: z.string().optional(),
 });
 
 export async function POST(
@@ -51,8 +51,8 @@ export async function POST(
 
       // Check if user is already a participant
       const existingParticipant = await em.findOne(Participant, {
-        userId: Number(fid),
-        challengeId: challenge.id
+        user: { id: Number(fid) },
+        challenge: { id: challenge.id }
       });
 
       if (existingParticipant) {
@@ -66,14 +66,14 @@ export async function POST(
       let user = await em.findOne(User, { id: Number(fid) });
       
       if (!user) {
-        user = new User(Number(fid), username, displayName, profilePictureUrl);
+        user = new User(Number(fid), username??'', displayName??'', profilePictureUrl??'');
         em.persist(user);
       }
 
       // Create new participant
       const participant = em.create(Participant, {
-        userId: Number(fid),
-        challengeId: challenge.id,
+        // userId: Number(fid),
+        // challengeId: challenge.id,
         user,
         challenge,
         amountContributed: 0,
@@ -125,14 +125,14 @@ export async function GET(
       }
 
       // TODO: Fetch actual participant data from Farcaster API
-      const participants = await em.find(Participant, { challengeId: challenge.id }, {
+      const participants = await em.find(Participant, { challenge: { id: challenge.id } }, {
         populate: ['user']
       });
 
       return NextResponse.json(
         {
           participants: participants.map((p) => ({
-            userId: p.userId,
+            fid: p.user.id,
             username: p.user.username,
             displayName: p.user.displayName,
             profilePictureUrl: p.user.profilePictureUrl,

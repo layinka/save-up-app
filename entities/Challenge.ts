@@ -1,10 +1,11 @@
-import { Entity, PrimaryKey, Property, OptionalProps, ManyToOne, ManyToMany, Collection, types } from '@mikro-orm/core';
+import { Entity, PrimaryKey, Property, OptionalProps, ManyToOne, ManyToMany, Collection, types, OneToMany } from '@mikro-orm/core';
 import { User } from './User';
+import { Participant } from './Participant';
 
 @Entity({ tableName: 'challenges' }) // Explicitly set table name if needed
 export class Challenge {
 
-  [OptionalProps]?: 'createdAt' | 'updatedAt' | 'currentAmount' | 'participantsCount' | 'description' | 'targetDate';
+  [OptionalProps]?: 'createdAt' | 'updatedAt' | 'currentAmount' |  'description' | 'targetDate';
 
   @PrimaryKey()
   id!: number; // Auto-incrementing primary key by default
@@ -24,12 +25,13 @@ export class Challenge {
   @Property({ type: types.datetime, nullable: true })
   targetDate?: Date | null;
 
-  @Property({ type: types.integer })
-  creatorId: number;
+  // @Property({ type: types.integer })
+  // creatorId: number;
 
+  // @ManyToOne(() => User, { mapToPk: true })
+  // creator!: User;
   @ManyToOne(() => User)
   creator!: User;
-
 
   @Property({ type: types.decimal, default: 0 })
   totalAmountContributed: number = 0;
@@ -40,10 +42,13 @@ export class Challenge {
   @Property({ onUpdate: () => new Date() })
   updatedAt: Date = new Date();
 
+  // @OneToMany(() => Participant, (participant) => participant.challenge)
+  // participants = new Collection<Participant>(this);
+
+
   // Constructor (optional but good practice)
-  constructor(name: string, goalAmount: number, creatorId: number) {
+  constructor(name: string, goalAmount: number) {
     this.name = name;
     this.goalAmount = goalAmount;
-    this.creatorId = creatorId;
   }
 }

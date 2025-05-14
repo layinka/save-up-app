@@ -44,14 +44,14 @@ export function InviteLinkDialog({ open, onOpenChange, challengeId, challengeNam
               onClick={handleCopy}
               className={`p-3 rounded-lg transition-colors ${
                 copied 
-                  ? 'bg-[#1DB954] text-white' 
+                  ? 'bg-[#1DB954] text-white text-[#1DB954]' 
                   : 'bg-white border border-[#00C896] text-[#00C896] hover:bg-[#00C896] hover:text-white'
               }`}
             >
               {copied ? (
-                <CheckIcon className="h-5 w-5" />
+                <CheckIcon className="h-5 w-5 text-[#14D13D]" />
               ) : (
-                <ClipboardIcon className="h-5 w-5" />
+                <ClipboardIcon className="h-5 w-5 text-[#14D13D]" />
               )}
             </Button>
           </div>

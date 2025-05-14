@@ -11,6 +11,10 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  images: {
+    domains: ['pic.sum', 'picsum.photos','api.dicebear.com'],
+    // remotePatterns: [new URL('https://api.dicebear.com/**')],
+  },
 };
 
 export default nextConfig;
