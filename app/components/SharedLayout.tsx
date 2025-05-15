@@ -97,7 +97,7 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
           {children} {/* Page content will be rendered here */}
         </main>
 
-        <footer className="mt-auto pt-4 flex justify-center"> {/* Use mt-auto to push footer down */}
+        <footer className="mt-auto pt-4 text-center"> {/* Use mt-auto to push footer down */}
           <Button
             variant="ghost"
             size="sm"
@@ -106,6 +106,7 @@ export function SharedLayout({ children }: { children: React.ReactNode }) {
           >
             Built on Base with MiniKit
           </Button>
+          <div className="text-xs text-[var(--ock-text-foreground-muted)]">SaveUp - alpha.0.0.1 - Test Stage</div>
         </footer>
       </div>
     </div>
