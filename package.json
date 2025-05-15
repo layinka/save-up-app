@@ -20,7 +20,8 @@
   "dependencies": {
     "@coinbase/onchainkit": "latest",
     "@farcaster/core": "^0.16.4",
-    "@farcaster/frame-sdk": "^0.0.35",
+    "@farcaster/frame-sdk": "^0.0.41",
+    "@farcaster/frame-wagmi-connector": "^0.0.30",
     "@farcaster/hub-nodejs": "^0.13.5",
     "@heroicons/react": "^2.2.0",
     "@mikro-orm/cli": "^6.4.15",

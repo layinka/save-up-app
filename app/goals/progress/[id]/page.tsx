@@ -125,12 +125,12 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
 
         {/* Invite Buttons */}
         <div className="grid grid-cols-2 gap-4 mb-8">
-          <button
+          {/* <button
             onClick={() => setIsInviteDialogOpen(true)}
             className="p-4 bg-white rounded-full shadow-lg border-2 border-[#00C896] text-[#333333] font-medium hover:bg-[#00C896] hover:text-white transition-colors duration-200"
           >
             Search Friends
-          </button>
+          </button> */}
           <button
             onClick={() => setIsInviteLinkDialogOpen(true)}
             className="p-4 bg-white rounded-full shadow-lg border-2 border-[#FCA311] text-[#333333] font-medium hover:bg-[#FCA311] hover:text-white transition-colors duration-200"

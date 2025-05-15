@@ -7,6 +7,9 @@ import { Button } from '@/app/components/DemoComponents';
 import { useMiniKit, useViewProfile } from '@coinbase/onchainkit/minikit';
 import { getDefaultAvatarImage } from '@/lib/utils';
 import { ParticipantDetail } from '@/components/ParticipantDetail';
+import { useWriteContract, useChainId } from 'wagmi';
+import { parseUnits } from 'viem';
+import { IERC20_ABI, getContractAddress } from '@/lib/contracts';
 
 interface Participant {
   fid: string;
@@ -29,6 +32,8 @@ interface Challenge {
 export default function InvitePage({ params }: { params: { id: string } }) {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { writeContract, isSuccess } = useWriteContract();
+  const chainId = useChainId();
   const [isJoining, setIsJoining] = useState(false);
   const router = useRouter();
   const {context} = useMiniKit();
@@ -130,6 +135,32 @@ export default function InvitePage({ params }: { params: { id: string } }) {
               <p className="font-semibold text-[#14213D]">
                 {inviter ? inviter.displayName : 'Unknown Friend'}
               </p>
+              <Button
+                onClick={() => {
+                  writeContract({
+                    address: '0x5FbDB2315678afecb367f032d93F642f64180aa3',
+                    abi: [{
+                      name: 'approve',
+                      type: 'function',
+                      stateMutability: 'nonpayable',
+                      inputs: [
+                        { name: 'spender', type: 'address' },
+                        { name: 'amount', type: 'uint256' }
+                      ],
+                      outputs: [{ type: 'bool' }]
+                    }],
+                    functionName: 'approve',
+                    args: [
+                      '0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0',
+                      parseUnits('20', 6) // Assuming USDT has 6 decimals
+                    ],
+                    // chainId: 31337
+                  });
+                }}
+                className="mt-4 bg-[#00C896] hover:bg-[#00B085] text-white py-2 px-4 rounded-lg"
+              >
+                {isSuccess ? 'Approved!' : 'Test Approve 20 USDT'}
+              </Button>
             </div>
           </div>
           <div className="mb-6">
