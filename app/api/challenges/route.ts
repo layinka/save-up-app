@@ -100,19 +100,21 @@ export async function POST(request: Request) {
 }
 
 // --- GET Handler --- 
-async function handleGetChallenges(userId: number) {
+async function handleGetChallenges(userId?: number) {
   const em = await getEm(); // Get the EntityManager
   try {
-    // Find all participants entries for this user
-    let participants = userId? await em.find(Participant, { user: { id: userId } }, {
-      populate: ['challenge']
-    }): await em.find(Participant, {  }, {
-      populate: ['challenge']
-    });
-
-    // Extract challenges from participants
-    const userChallenges = participants.map(p => p.challenge);
-    return NextResponse.json(userChallenges);
+    // Find challenges based on user participation
+    if (userId) {
+      const participants = await em.find(Participant, { user: { id: userId } }, {
+        populate: ['challenge']
+      });
+      const userChallenges = participants.map(p => p.challenge);
+      return NextResponse.json(userChallenges);
+    } else {
+      // If no user specified, fetch all challenges
+      const challenges = await em.find(Challenge, {});
+      return NextResponse.json(challenges);
+    }
   } catch (error) {
     console.error('Error fetching challenges:', error);
     return NextResponse.json({ error: 'Internal Server Error', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
@@ -120,12 +122,15 @@ async function handleGetChallenges(userId: number) {
 }
 
 export async function GET(request: Request) {
+  // Temporarily disable frame message validation
   // const { isValid, fid } = await validateFrameMessage(request);
-  
   // if (!isValid || !fid) {
   //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   // }
-  const fid =undefined;// request.headers.get('fid');
 
-  return await withRequestContext(async () => await handleGetChallenges(Number(fid)));
+  // Get FID from headers
+  const fidHeader = request.headers.get('fid');
+  const fid = fidHeader ? Number(fidHeader) : undefined;
+
+  return await withRequestContext(async () => await handleGetChallenges(fid));
 }
