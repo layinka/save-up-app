@@ -77,8 +77,10 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
     if (isOpen) {
       setAmount('');
       setError(null);
-      setStep('approve');
+      // setStep('approve');
     }
+    refetchAllowance();
+    refetchUsdtBalance();
   }, [isOpen]);
   
   // Update step when approval status changes or amount changes
@@ -95,7 +97,8 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
         setStep('deposit');
         setError(null);
       } else {
-        setStep('approve');
+        // setStep('approve');
+        setStep('deposit');
       }
     }
   }, [amount, allowanceData]);
