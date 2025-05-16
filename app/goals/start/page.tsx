@@ -16,7 +16,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export default function StartGoalPage() {
   const { context } = useMiniKit();
   const publicClient = usePublicClient()
-  const { createChallenge, isChallengeLoading, challengeHash } = useVault();
+  const { createChallenge, isChallengeLoading, challengeHash, challengeReceipt } = useVault();
   
   const [amount, setAmount] = useState(100);
   const [duration, setDuration] = useState(1);
