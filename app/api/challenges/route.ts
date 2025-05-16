@@ -104,7 +104,9 @@ async function handleGetChallenges(userId: number) {
   const em = await getEm(); // Get the EntityManager
   try {
     // Find all participants entries for this user
-    const participants = await em.find(Participant, { user: { id: userId } }, {
+    let participants = userId? await em.find(Participant, { user: { id: userId } }, {
+      populate: ['challenge']
+    }): await em.find(Participant, {  }, {
       populate: ['challenge']
     });
 
@@ -118,12 +120,12 @@ async function handleGetChallenges(userId: number) {
 }
 
 export async function GET(request: Request) {
-  const { isValid, fid } = await validateFrameMessage(request);
+  // const { isValid, fid } = await validateFrameMessage(request);
   
-  if (!isValid || !fid) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  // const fid = request.headers.get('fid');
+  // if (!isValid || !fid) {
+  //   return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  // }
+  const fid =undefined;// request.headers.get('fid');
 
   return await withRequestContext(async () => await handleGetChallenges(Number(fid)));
 }
