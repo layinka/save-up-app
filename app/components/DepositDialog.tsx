@@ -7,11 +7,12 @@ import { Button } from '@/app/components/DemoComponents';
 import { useVault } from '@/app/hooks/useVault';
 import { BaseError, useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { USDT_DECIMALS, usdtAddress, vaultAddress } from '../utils/chain-details';
-import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
+import { Address, erc20Abi, formatUnits, parseGwei, parseUnits } from 'viem';
 import { sleep } from '@/lib/utils';
 import { SaveUpVault_ABI } from '@/lib/contracts';
 import { useMiniKit } from '@coinbase/onchainkit/minikit';
 import { base } from 'wagmi/chains';
+import toast from 'react-hot-toast';
 
 interface DepositDialogProps {
   isOpen: boolean;
@@ -175,6 +176,9 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
           functionName: 'contribute',
           args: [BigInt(challengeId), amountInWei],
           chainId: base.id,
+          maxFeePerGas: undefined,
+          maxPriorityFeePerGas: undefined,
+          gasPrice: parseGwei('0.008354183'), // Exact gas price from Basescan
         });
       }catch(error){
         console.log('Error1 depositing to vault in contract:',depositError ,!depositError? '':( (depositError as BaseError).shortMessage || (depositError as BaseError).message), error);
@@ -200,6 +204,9 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
         const errorData = await response.json();
         throw new Error(errorData.error || 'Failed to update challenge amount');
       }
+
+      //show a toast here
+      toast.success('Deposit successful');
 
       // If everything is successful, close the dialog
       onClose();

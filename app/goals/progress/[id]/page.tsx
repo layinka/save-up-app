@@ -54,32 +54,34 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
   const [isLoading, setIsLoading] = useState(true);
   const [isWithdrawable, setIsWithdrawable] = useState(false);
 
+  // Fetch challenge data
+  const fetchChallenge = async () => {
+    try {
+      const response = await fetch(`/api/challenges/${params.id}`, {
+        headers: {
+          ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+        }
+      });
+      if (!response.ok) throw new Error('Failed to fetch challenge');
+      const data = await response.json();
+      setChallenge(data);
+
+      // Determine if challenge is withdrawable
+      // Check if current time is past the challenge end date
+      const currentTime = new Date().getTime();
+      const endTime = new Date(data.endDate).getTime();
+      const hasReachedGoal = data.currentAmount >= data.goalAmount;
+
+      setIsWithdrawable(hasReachedGoal && currentTime >= endTime);
+    } catch (error) {
+      console.error('Error fetching challenge:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    // Fetch challenge data
-    const fetchChallenge = async () => {
-      try {
-        const response = await fetch(`/api/challenges/${params.id}`, {
-          headers: {
-            ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
-          }
-        });
-        if (!response.ok) throw new Error('Failed to fetch challenge');
-        const data = await response.json();
-        setChallenge(data);
-
-        // Determine if challenge is withdrawable
-        // Check if current time is past the challenge end date
-        const currentTime = new Date().getTime();
-        const endTime = new Date(data.endDate).getTime();
-        const hasReachedGoal = data.currentAmount >= data.goalAmount;
-
-        setIsWithdrawable(hasReachedGoal && currentTime >= endTime);
-      } catch (error) {
-        console.error('Error fetching challenge:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    
 
     if (params.id) {
       fetchChallenge();
@@ -153,6 +155,10 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
   // Calculate progress percentage based on user's contribution from blockchain
   const userContribution = parseFloat(contribution ?? '0') || 0;
   const userTarget = parseFloat(target ?? '0') || (challenge?.goalAmount || 0);
+
+  function refreshChallenge() {
+    fetchChallenge();
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
@@ -320,7 +326,10 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
       {address && <DepositDialog
         address={address}
         isOpen={isDepositDialogOpen}
-        onClose={() => setIsDepositDialogOpen(false)}
+        onClose={() => {
+          setIsDepositDialogOpen(false);
+          refreshChallenge();
+        }}
         challengeId={Number(params.id)}
         challengeAmount={challenge?.goalAmount || 0}
         challengeName={challenge?.name || ''}

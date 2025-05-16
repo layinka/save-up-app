@@ -190,33 +190,9 @@ export function Home({}: HomeProps) {
       setFrameReady();
     }
 
-   
-    tryH();
     // handleSignIn();
   }, [setFrameReady, isFrameReady]);
 
-  const tryH = async () => {
-    // Then update challenge amount in the backend
-    const response = await fetch(`/api/challenges/1/deposit`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'fid': '1',
-      },
-      body: JSON.stringify({
-        amount: 2,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      // throw new Error(errorData.error || 'Failed to update challenge amount');
-      console.log('Failed to update challenge amount', errorData);
-      return
-    }
-
-    console.log('Challenge amount updated successfully');
-  }
   
   // // Check for existing authentication on component mount
   // useEffect(() => {
