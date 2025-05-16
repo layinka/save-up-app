@@ -11,7 +11,7 @@ import { base } from 'wagmi/chains';
 // Zod schema for validating the request body (can remain largely the same)
 const createChallengeSchema = z.object({
   // User fields
-  challengeId: z.number(),
+  hash: z.string(),
   username: z.string().optional(),
   displayName: z.string().optional(),
   profilePictureUrl: z.string().optional(),
@@ -42,8 +42,16 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
       transport: http(),
     });
 
-    const receipt = await publicClient.getTransactionReceipt({ hash: '0x0'});
-    console.log('Transaction receipt received:', receipt, receipt.logs)
+    
+
+    const {hash, name, description, goalAmount, targetDate, username, displayName, profilePictureUrl, transactionHash } = validationResult.data;
+    const creatorFid = request.fid;
+    if (!creatorFid) {
+      return NextResponse.json({ error: 'Creator FID is required' }, { status: 400 });
+    }
+
+    const receipt = await publicClient.getTransactionReceipt({ hash: hash as `0x${string}`});
+    // console.log('Transaction receipt received:', receipt, receipt.logs)
     
     // Define ChallengeCreated event ABI
     const challengeCreatedABI = [
@@ -59,7 +67,7 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
       }
     ] as const;
 
-    // Extract challenge ID from transaction receipt
+    // Extract challenge ID from transaction receipt and check if it has alraedy been used, or created by hash
     const challengeEvent = receipt.logs
       .map((log) => {
         try {
@@ -77,11 +85,7 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
 
     console.log('Challenge event:', challengeEvent)
 
-    const {challengeId, name, description, goalAmount, targetDate, username, displayName, profilePictureUrl, transactionHash } = validationResult.data;
-    const creatorFid = request.fid;
-    if (!creatorFid) {
-      return NextResponse.json({ error: 'Creator FID is required' }, { status: 400 });
-    }
+    const challengeId = Number(challengeEvent?.id);
 
     // Find or create user
     let user = await em.findOne(User, { id: Number(creatorFid) });
@@ -149,7 +153,7 @@ async function handleGetChallenges(userId?: number) {
     chain: base,
     transport: http(),
   });
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: '0x7c6da4af6395a9c3518527a8198b83c980636dc81d76bad19772dfd21f9de50c'});
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: '0xb781dfe97fc9be3d5923b11d11711c98183d4de2d6119ab43ed6afcf17d2f6c5'});
     console.log('Transaction receipt received:', receipt, receipt.logs)
     
     // Define ChallengeCreated event ABI

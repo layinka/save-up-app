@@ -67,76 +67,38 @@ export default function StartGoalPage() {
             try {
               const challengeName = `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`;
               const tx = await createChallenge(challengeName, amount.toString(), duration);
-              console.log('Hash: ', tx, 'publicClient', publicClient)
-              if (tx && publicClient) {
+              console.log('Hash: ', tx)
+              if (tx ) {
                 console.log('Waiting for transaction receipt...')
-                await sleep(3000);
-                // Explicitly wait for transaction receipt
-                const receipt = await publicClient.getTransactionReceipt({ hash: tx});
-                console.log('Transaction receipt received:', receipt, receipt.logs)
+                await sleep(2000);
                 
-                toast.loading('Challenge creation confirmed...', { id: 'create-challenge' });
+                
+                const response = await fetch('/api/challenges', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+                  },
+                  body: JSON.stringify({
+                    hash: tx,
+                    creatorFid: context?.user?.fid?.toString(),
+                    username: context?.user?.username,
+                    displayName: context?.user?.displayName,
+                    profilePictureUrl: context?.user?.pfpUrl,
+                    name: challengeName,
+                    description: `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`,
+                    goalAmount: amount,
+                    targetDate: new Date(Date.now() + duration * 30 * 24 * 60 * 60 * 1000).toISOString(),
+                    transactionHash: tx,
+                  }),
+                });
 
-                // Define ChallengeCreated event ABI
-                const challengeCreatedABI = [
-                  {
-                    type: 'event',
-                    name: 'ChallengeCreated',
-                    inputs: [
-                      { name: 'id', type: 'uint256', indexed: true },
-                      { name: 'creator', type: 'address', indexed: true },
-                      { name: 'targetAmount', type: 'uint256', indexed: false },
-                      { name: 'endTime', type: 'uint256', indexed: false }
-                    ]
-                  }
-                ] as const;
-
-                // Extract challenge ID from transaction receipt
-                const challengeEvent = receipt.logs
-                  .map((log) => {
-                    try {
-                      const decoded = decodeEventLog({
-                        abi: challengeCreatedABI,
-                        data: log.data,
-                        topics: log.topics
-                      });
-                      return decoded.eventName === 'ChallengeCreated' ? decoded.args : null;
-                    } catch {
-                      return null;
-                    }
-                  })
-                  .find((args) => args !== null);
-
-                console.log('Challenge event:', challengeEvent)
-                // Save challenge to database
-                if (challengeEvent) {
-                  const response = await fetch('/api/challenges', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
-                    },
-                    body: JSON.stringify({
-                      challengeId: challengeEvent.id,
-                      creatorFid: context?.user?.fid?.toString(),
-                      username: context?.user?.username,
-                      displayName: context?.user?.displayName,
-                      profilePictureUrl: context?.user?.pfpUrl,
-                      name: challengeName,
-                      description: `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`,
-                      goalAmount: amount,
-                      targetDate: new Date(Date.now() + duration * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                      transactionHash: tx,
-                    }),
-                  });
-
-                  if (response.ok) {
-                    const challenge = await response.json();
-                    toast.success('Challenge saved successfully!', { duration: 3000 });
-                    window.location.href = `/goals/progress/${challenge.id}`;
-                  } else {
-                    toast.error('Failed to save challenge to database');
-                  }
+                if (response.ok) {
+                  const challenge = await response.json();
+                  toast.success('Challenge Created successfully!', { duration: 3000 });
+                  window.location.href = `/goals/progress/${challenge.id}`;
+                } else {
+                  toast.error('Failed to Create challenge');
                 }
               }else{
                 toast.error('Failed to create challenge');
