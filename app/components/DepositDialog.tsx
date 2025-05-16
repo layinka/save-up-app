@@ -35,7 +35,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       abi: erc20Abi,
       functionName: 'allowance',
       // @ts-ignore - TypeScript expects a readonly array with 1 element, but we need 2 elements
-      args: address && vaultAddress ? [address as Address, vaultAddress] : undefined,
+      args:  [address as Address, vaultAddress] ,
       // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
       // enabled: !!address,
   });
@@ -43,7 +43,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       address: usdtAddress,
       abi: erc20Abi,
       functionName: 'balanceOf',
-      args: address ? [address as Address] : undefined,
+      args: [address as Address] 
       // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
       // enabled: !!address,
   });
@@ -62,6 +62,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
 
   useEffect(() => {
     if(address){
+      console.log('refteching allowance and balance for  address', address);
       refetchAllowance();
       refetchUsdtBalance();
     }
