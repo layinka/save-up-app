@@ -24,7 +24,7 @@ interface DepositDialogProps {
 
 export function DepositDialog({address, isOpen, onClose, challengeId, challengeAmount, challengeName }: DepositDialogProps) {
   const [amount, setAmount] = useState<string>('');
-  const [step, setStep] = useState<'approve' | 'deposit' >('approve');
+  const [step, setStep] = useState<'approve' | 'deposit' >('deposit');
   const [error, setError] = useState<string | null>(null);
   // const { address } = useAccount();
   const { context } = useMiniKit();
@@ -194,7 +194,7 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
       // If everything is successful, close the dialog
       onClose();
     } catch (error) {
-      console.error('Deposit error:', error);
+      console.error('Deposit error:', isDepositError, error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     }
   };
