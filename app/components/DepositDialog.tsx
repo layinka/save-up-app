@@ -37,7 +37,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       // @ts-ignore - TypeScript expects a readonly array with 1 element, but we need 2 elements
       args: address && vaultAddress ? [address as Address, vaultAddress] : undefined,
       // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
-      enabled: !!address,
+      // enabled: !!address,
   });
   const { data: usdtBalance ,refetch: refetchUsdtBalance} = useReadContract({
       address: usdtAddress,
@@ -45,7 +45,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       functionName: 'balanceOf',
       args: address ? [address as Address] : undefined,
       // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
-      enabled: !!address,
+      // enabled: !!address,
   });
   // const { 
   //   // usdtBalance, 
@@ -111,6 +111,8 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       await sleep(2000);
       setStep('deposit');
     }
+
+    refetchAllowance();
   };
   
   const handleDeposit = async () => {
