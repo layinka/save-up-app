@@ -67,14 +67,14 @@ export function VaultBalance({ challengeId, challengeAmount, challengeName, addr
         </Button>
       </div>
       
-      <DepositDialog
+      {address && <DepositDialog
         address={address}
         isOpen={isDepositDialogOpen}
         onClose={() => setIsDepositDialogOpen(false)}
         challengeId={challengeId || 0}
         challengeAmount={challengeAmount || 0}
         challengeName={challengeName || ''}
-      />
+      />}
     </div>
   );
 }

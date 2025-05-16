@@ -11,6 +11,7 @@ import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
 import { sleep } from '@/lib/utils';
 import { SaveUpVault_ABI } from '@/lib/contracts';
 import { useMiniKit } from '@coinbase/onchainkit/minikit';
+import { base } from 'wagmi/chains';
 
 interface DepositDialogProps {
   isOpen: boolean;
@@ -139,19 +140,19 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
     }
     const amountInWei = parseUnits(amount, USDT_DECIMALS);
 
-    // Check if user has sufficient USDT balance
-    const usdtBalanceValue = parseFloat(formatUnits(usdtBalance??BigInt(0), USDT_DECIMALS));
-    if (amountInWei > (usdtBalance??BigInt(0))) {
-      setError(`Insufficient USDT balance. You have ${usdtBalanceValue.toFixed(2)} USDT available`);
-      return;
-    }
+    //// Check if user has sufficient USDT balance
+    // const usdtBalanceValue = parseFloat(formatUnits(usdtBalance??BigInt(0), USDT_DECIMALS));
+    // if (amountInWei > (usdtBalance??BigInt(0))) {
+    //   setError(`Insufficient USDT balance. You have ${usdtBalanceValue.toFixed(2)} USDT available`);
+    //   return;
+    // }
 
     // Check if user has sufficient allowance
     
-    if (amountInWei > (allowanceData??BigInt(0))) {
-      setError(`Insufficient allowance. Please approve ${amountValue.toFixed(2)} USDT`);
-      return;
-    }
+    // if (amountInWei > (allowanceData??BigInt(0))) {
+    //   setError(`Insufficient allowance. Please approve ${amountValue.toFixed(2)} USDT`);
+    //   return;
+    // }
 
     // Prevent multiple submissions
     if (isDepositPending || isDepositError) {
@@ -168,7 +169,10 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
         abi: SaveUpVault_ABI,
         functionName: 'contribute',
         args: [BigInt(challengeId), amountInWei],
+        chainId: base.id,
       });
+
+      await sleep(2000);
       
       // Then update challenge amount in the backend
       const response = await fetch(`/api/challenges/${challengeId}/deposit`, {
@@ -217,10 +221,10 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
               placeholder="0.00"
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#00C896] focus:border-[#00C896]"
             />
-            <div className="text-sm text-gray-500 mt-1 space-y-1">
+            {/* <div className="text-sm text-gray-500 mt-1 space-y-1">
               <p>Available: {(+formatUnits(usdtBalance??BigInt(0), USDT_DECIMALS)).toFixed(2)} USDT</p>
               <p>Allowance: {(+formatUnits(allowanceData??BigInt(0), USDT_DECIMALS)).toFixed(2)} USDT</p>
-            </div>
+            </div> */}
           </div>
           
           {error && (
