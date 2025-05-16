@@ -59,6 +59,13 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
   //   deposit,
   //   allowanceData
   // } = useVault();
+
+  useEffect(() => {
+    if(address){
+      refetchAllowance();
+      refetchUsdtBalance();
+    }
+  }, [address]);
   
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -71,6 +78,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
   
   // Update step when approval status changes or amount changes
   useEffect(() => {
+    console.log('allowanceData', allowanceData);
     if(!allowanceData){
       return;
     }
