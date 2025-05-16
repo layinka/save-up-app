@@ -169,7 +169,7 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
       // First, deposit to the vault
       console.log('depositing to vault', amountInWei, challengeId, vaultAddress);
         
-      try{
+      // try{
         let tx = await depositToVault({
           address: vaultAddress,
           abi: SaveUpVault_ABI,
@@ -180,11 +180,11 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
           maxPriorityFeePerGas: undefined,
           gasPrice: parseGwei('0.008354183'), // Exact gas price from Basescan
         });
-      }catch(error){
-        console.log('Error1 depositing to vault in contract:',depositError ,!depositError? '':( (depositError as BaseError).shortMessage || (depositError as BaseError).message), error);
-        // setError('Failed to deposit to vault');
-        // return;
-      }
+      // }catch(error){
+      //   console.log('Error1 depositing to vault in contract:',depositError ,!depositError? '':( (depositError as BaseError).shortMessage || (depositError as BaseError).message), error);
+      //   // setError('Failed to deposit to vault');
+      //   // return;
+      // }
 
       await sleep(2000);
       
