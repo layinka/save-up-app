@@ -13,7 +13,7 @@ interface VaultBalanceProps {
   address?: Address;
 }
 
-export function VaultBalance({ challengeId, challengeAmount, challengeName }: VaultBalanceProps) {
+export function VaultBalance({ challengeId, challengeAmount, challengeName, address }: VaultBalanceProps) {
   const { vaultBalance, usdtBalance, isLoading, isApproved } = useVault();
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
   const [formattedVaultBalance, setFormattedVaultBalance] = useState('0.00');
