@@ -11,6 +11,7 @@ import { decodeEventLog } from 'viem';
 import Link  from 'next/link';
 import { BottomNavBar } from '@/app/components/BottomNavBar';
 import { base } from 'viem/chains';
+import { sleep } from '@/lib/utils';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -69,6 +70,7 @@ export default function StartGoalPage() {
               console.log('Hash: ', tx, 'publicClient', publicClient)
               if (tx && publicClient) {
                 console.log('Waiting for transaction receipt...')
+                await sleep(3000);
                 // Explicitly wait for transaction receipt
                 const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, confirmations:1});
                 console.log('Transaction receipt received:', receipt)
@@ -171,7 +173,7 @@ export default function StartGoalPage() {
 
         {/*Add a note to user to inform them that the first to reach target out of all participants will get 10% extra reward in SUP Token, and Others that reach the target will get 10 SUP Token*/}
         <p className="text-sm text-[#00C896] mt-6 font-semibold">
-          🏆 Race to the Goal: Every winner earns 10 SUP, and the top performer gets 10% bonus SUP Extra!
+          🏆 Race to the Goal: Every winner earns 10 SUP!<br/>... and the top performer gets <b>10% bonus SUP Extra!</b>
         </p>
       </main>
 

@@ -9,3 +9,7 @@ export function cn(...inputs: ClassValue[]) {
 export function getDefaultAvatarImage(seed: any){
   return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
 }
+
+export function sleep(milliseconds: number) {
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+}
