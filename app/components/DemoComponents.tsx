@@ -162,12 +162,12 @@ type HomeProps = {};
 export function Home({}: HomeProps) {
   const { setFrameReady, isFrameReady, context } = useMiniKit();
   const { signIn } = useAuthenticate();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Handle sign-out
   const handleSignOut = useCallback(() => {
@@ -193,141 +193,141 @@ export function Home({}: HomeProps) {
     // handleSignIn();
   }, [setFrameReady, isFrameReady]);
   
-  // Check for existing authentication on component mount
-  useEffect(() => {
-    // Check if user is already authenticated in local storage
-    if (isUserAuthenticated()) {
-      // Check if the auth token is expired (default 60 minutes)
-      if (isAuthTokenExpired()) {
-        console.log('Authentication token expired, signing out...');
-        handleSignOut();
-      } else {
-        const storedUser = getUserFromStorage();
-        setUser(storedUser);
-        setIsAuthenticated(true);
-        setAuthSuccess(`Welcome back, ${getUserDisplayName()}!`);
+  // // Check for existing authentication on component mount
+  // useEffect(() => {
+  //   // Check if user is already authenticated in local storage
+  //   if (isUserAuthenticated()) {
+  //     // Check if the auth token is expired (default 60 minutes)
+  //     if (isAuthTokenExpired()) {
+  //       console.log('Authentication token expired, signing out...');
+  //       handleSignOut();
+  //     } else {
+  //       const storedUser = getUserFromStorage();
+  //       setUser(storedUser);
+  //       setIsAuthenticated(true);
+  //       setAuthSuccess(`Welcome back, ${getUserDisplayName()}!`);
         
-        // Clear success message after 5 seconds
-        setTimeout(() => {
-          setAuthSuccess(null);
-        }, 5000);
-      }
-    }
-    // Set loading to false after checking authentication
-    setIsLoading(false);
-  }, [handleSignOut, setAuthSuccess]);
+  //       // Clear success message after 5 seconds
+  //       setTimeout(() => {
+  //         setAuthSuccess(null);
+  //       }, 5000);
+  //     }
+  //   }
+  //   // Set loading to false after checking authentication
+  //   setIsLoading(false);
+  // }, [handleSignOut, setAuthSuccess]);
 
   // Handle sign-in with MiniKit
-  const handleSignIn = useCallback(async () => {
-    try {
-      setIsAuthenticating(true);
-      setIsLoading(true);
-      setAuthError(null);
+  // const handleSignIn = useCallback(async () => {
+  //   try {
+  //     setIsAuthenticating(true);
+  //     setIsLoading(true);
+  //     setAuthError(null);
       
-      // Clear any previous success message
-      setAuthSuccess(null);
+  //     // Clear any previous success message
+  //     setAuthSuccess(null);
       
-      const nonce = Date.now().toString()
-      // Request signature from user
-      const result = await signIn({
-        nonce,
+  //     const nonce = Date.now().toString()
+  //     // Request signature from user
+  //     const result = await signIn({
+  //       nonce,
 
-      });
+  //     });
 
-      console.log('Sign-in result:', result);
+  //     console.log('Sign-in result:', result);
       
-      if (result) {
-        // Extract signature and message from result
-        const { signature, message } = result;
+  //     if (result) {
+  //       // Extract signature and message from result
+  //       const { signature, message } = result;
         
-        // Send to auth/verify endpoint
-        const response = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            signature,
-            message,
-            nonce
-          }),
-        });
+  //       // Send to auth/verify endpoint
+  //       const response = await fetch('/api/auth/verify', {
+  //         method: 'POST',
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({
+  //           signature,
+  //           message,
+  //           nonce
+  //         }),
+  //       });
         
-        const data = await response.json();
+  //       const data = await response.json();
         
-        if (data.success) {
-          setIsAuthenticated(true);
-          setUser(data.user);
-          // Save user data to local storage
-          saveUserToStorage(data.user);
-          // Set success message
-          setAuthSuccess(`Successfully authenticated as ${data.user.displayName || 'User'}`);
+  //       if (data.success) {
+  //         setIsAuthenticated(true);
+  //         setUser(data.user);
+  //         // Save user data to local storage
+  //         saveUserToStorage(data.user);
+  //         // Set success message
+  //         setAuthSuccess(`Successfully authenticated as ${data.user.displayName || 'User'}`);
           
-          // Clear success message after 5 seconds
-          setTimeout(() => {
-            setAuthSuccess(null);
-          }, 5000);
+  //         // Clear success message after 5 seconds
+  //         setTimeout(() => {
+  //           setAuthSuccess(null);
+  //         }, 5000);
           
-          console.log('Authentication successful:', data.user);
-        } else {
-          setAuthError(data.error || 'Authentication failed');
-          setIsAuthenticated(false);
-          setUser(null);
-          // Remove user data from local storage
-          removeUserFromStorage();
-        }
-      }
-    } catch (error) {
-      console.error('Sign-in error:', error);
-      setAuthError(error instanceof Error ? error.message : 'Authentication failed');
-      setIsAuthenticated(false);
-    } finally {
-      setIsAuthenticating(false);
-      setIsLoading(false);
-    }
-  }, [signIn, setIsAuthenticated, setIsAuthenticating, setAuthError, setAuthSuccess, setUser, setIsLoading]);
+  //         console.log('Authentication successful:', data.user);
+  //       } else {
+  //         setAuthError(data.error || 'Authentication failed');
+  //         setIsAuthenticated(false);
+  //         setUser(null);
+  //         // Remove user data from local storage
+  //         removeUserFromStorage();
+  //       }
+  //     }
+  //   } catch (error) {
+  //     console.error('Sign-in error:', error);
+  //     setAuthError(error instanceof Error ? error.message : 'Authentication failed');
+  //     setIsAuthenticated(false);
+  //   } finally {
+  //     setIsAuthenticating(false);
+  //     setIsLoading(false);
+  //   }
+  // }, [signIn, setIsAuthenticated, setIsAuthenticating, setAuthError, setAuthSuccess, setUser, setIsLoading]);
   
-  // Handle refresh authentication
-  const handleRefreshAuth = useCallback(async (): Promise<boolean> => {
-    try {
-      setIsLoading(true);
-      // Call handleSignIn to refresh authentication
-      await handleSignIn();
-      return true;
-    } catch (error) {
-      console.error('Error refreshing authentication:', error);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [handleSignIn]);
+  // // Handle refresh authentication
+  // const handleRefreshAuth = useCallback(async (): Promise<boolean> => {
+  //   try {
+  //     setIsLoading(true);
+  //     // Call handleSignIn to refresh authentication
+  //     await handleSignIn();
+  //     return true;
+  //   } catch (error) {
+  //     console.error('Error refreshing authentication:', error);
+  //     return false;
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // }, [handleSignIn]);
 
-  // Check authentication status when context changes
-  useEffect(() => {
-    // Only attempt automatic authentication if:
-    // 1. Frame is ready
-    // 2. User is not already authenticated (either from local storage or previous auth)
-    // 3. Not currently in the process of authenticating
-    // 4. No stored authentication exists
-    if (isFrameReady && !isAuthenticated && !isAuthenticating && !isUserAuthenticated()) {
-      handleSignIn();
-    } else if (isFrameReady && isAuthenticated && !isAuthenticating) {
-      // Check if authentication needs to be refreshed (token expired)
-      refreshAuthIfNeeded(handleRefreshAuth, 30) // Refresh if token is older than 30 minutes
-        .then(refreshed => {
-          if (refreshed) {
-            console.log('Authentication refreshed successfully');
-          }
-        })
-        .catch(error => {
-          console.error('Error refreshing authentication:', error);
-        });
-    }
-  }, [isFrameReady, isAuthenticated, isAuthenticating, handleSignIn, handleRefreshAuth]);
+  // // Check authentication status when context changes
+  // useEffect(() => {
+  //   // Only attempt automatic authentication if:
+  //   // 1. Frame is ready
+  //   // 2. User is not already authenticated (either from local storage or previous auth)
+  //   // 3. Not currently in the process of authenticating
+  //   // 4. No stored authentication exists
+  //   if (isFrameReady && !isAuthenticated && !isAuthenticating && !isUserAuthenticated()) {
+  //     handleSignIn();
+  //   } else if (isFrameReady && isAuthenticated && !isAuthenticating) {
+  //     // Check if authentication needs to be refreshed (token expired)
+  //     refreshAuthIfNeeded(handleRefreshAuth, 30) // Refresh if token is older than 30 minutes
+  //       .then(refreshed => {
+  //         if (refreshed) {
+  //           console.log('Authentication refreshed successfully');
+  //         }
+  //       })
+  //       .catch(error => {
+  //         console.error('Error refreshing authentication:', error);
+  //       });
+  //   }
+  // }, [isFrameReady, isAuthenticated, isAuthenticating, handleSignIn, handleRefreshAuth]);
 
   return (
     <div>
-      {isLoading ? (
+      {isLoading || !isFrameReady ? (
         <div className="flex flex-col h-[calc(88vh-44px)] animate-fade-in items-center justify-center p-6 bg-[#F9FAFB]">
           <div className="space-y-4 text-center">
             <div className="w-24 h-24 bg-[#00C896] rounded-full flex items-center justify-center mx-auto animate-pulse">
@@ -341,7 +341,7 @@ export function Home({}: HomeProps) {
         <div className="flex flex-col h-[calc(88vh-44px)] animate-fade-in items-center justify-between p-6 bg-[#F9FAFB]">
         {/* User Profile Section */}
         <div className="mt-16 mb-8 text-center">
-          {isAuthenticated && user ? (
+          {isAuthenticated && isFrameReady && context?.user ? (
             <div className="space-y-1">
               <div className="w-16 h-16 bg-[#00C896] rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl">💰</span>
@@ -362,29 +362,29 @@ export function Home({}: HomeProps) {
                 Last active: {new Date(user.lastSaved || user.timestamp || '').toLocaleString()}
               </p> */}
             </div>
-          ) : isFrameReady 
-              && !isAuthenticated ? 
-              // (
-            //   <div className="space-y-1">
-            //     <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
-            //       <span className="text-2xl">👤</span>
-            //     </div>
-            //     <h2 className="text-xl font-bold text-[#333333]">
-            //       Not Signed In
-            //     </h2>
-            //     <p className="text-sm text-[#14213D]">
-            //       {isAuthenticating ? 'Authenticating...' : 'Please sign in to continue'}
-            //     </p>
-            //   </div>
-            // ) 
-            (
-                <div className="space-y-1">
-                  <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
-                    <span className="text-2xl">👤</span>
-                  </div>
-                </div>
-            ) 
-            : 
+          ) :  
+          //     && !isAuthenticated ? 
+          //     // (
+          //   //   <div className="space-y-1">
+          //   //     <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
+          //   //       <span className="text-2xl">👤</span>
+          //   //     </div>
+          //   //     <h2 className="text-xl font-bold text-[#333333]">
+          //   //       Not Signed In
+          //   //     </h2>
+          //   //     <p className="text-sm text-[#14213D]">
+          //   //       {isAuthenticating ? 'Authenticating...' : 'Please sign in to continue'}
+          //   //     </p>
+          //   //   </div>
+          //   // ) 
+          //   (
+          //       <div className="space-y-1">
+          //         <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center mx-auto">
+          //           <span className="text-2xl">👤</span>
+          //         </div>
+          //       </div>
+          //   ) 
+          //   : 
           (
             <div className="space-y-4">
               <div className="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mx-auto animate-pulse">

@@ -36,7 +36,7 @@ interface UseVaultReturn {
   challengeHash: Address | undefined;
   getUserProgress: (challengeId: number, userAddress?: string) => Promise<{ contribution: string; target: string }>;
   allowanceData: string;
-  withdraw: (challengeId: number) => Promise<void>;
+  withdraw: (challengeId: number) => Promise<`0x${string}` | undefined>;
 }
 
 export function useVault(): UseVaultReturn {

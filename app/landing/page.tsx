@@ -94,6 +94,7 @@ const LandingPage: React.FC = () => {
     console.log(`Challenge ${id} clicked`);
 
     // TODO: Navigate to challenge details page using the challenge ID (which is now string)
+    window.location.href= `/goals/progress/${id}`;
   };
 
   const handleActionClick = async (action: string) => {
@@ -104,7 +105,7 @@ const LandingPage: React.FC = () => {
       console.log('Start New Goal clicked');
       // window.location.href= '/goals/start';
     }else if (action === 'Join Challenge') {
-      await approveUsdtSpending('100');
+      // await approveUsdtSpending('100');
       //redirect to challenges
       // window.location.href= '/challenges';
     }else if (action === 'Invite Friends') {
