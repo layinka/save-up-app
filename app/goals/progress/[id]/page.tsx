@@ -8,6 +8,13 @@ import { Input } from '@/components/ui/input';
 import { useMiniKit } from '@coinbase/onchainkit/minikit';
 import { InviteLinkDialog } from '@/components/InviteLinkDialog';
 import { ParticipantDetail } from '@/components/ParticipantDetail';
+import { VaultBalance } from '@/app/components/VaultBalance';
+import { DepositDialog } from '@/app/components/DepositDialog';
+import { useVault } from '@/app/hooks/useVault';
+import { useAccount, useReadContract } from 'wagmi';
+import { SaveUpVault_ABI } from '@/lib/contracts';
+import { vaultAddress } from '@/app/utils/chain-details';
+import { useUserProgress } from '@/app/hooks/useUserProgress';
 
 interface Participant {
   fid: number;
@@ -26,14 +33,23 @@ interface Challenge {
   participants: Participant[];
 }
 
-export default function ChallengeProgressPage({ params }: { params: { id: string } }) {
+export default function ChallengeProgressPage({ params }: { params: { id: number } }) {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isInviteDialogOpen, setIsInviteDialogOpen] = useState(false);
   const [isInviteLinkDialogOpen, setIsInviteLinkDialogOpen] = useState(false);
+  const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
+  const [isWithdrawDialogOpen, setIsWithdrawDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<Participant[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { address } = useAccount();
+  const { getUserProgress, withdraw } = useVault();
+  
+  // Get user progress from blockchain
+  const { contribution, target, progressPercentage, isLoading: loadingProgressPercent } = useUserProgress(params.id, address || '');
   const { context } = useMiniKit();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isWithdrawable, setIsWithdrawable] = useState(false);
 
   useEffect(() => {
     // Fetch challenge data
@@ -43,6 +59,14 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
         if (!response.ok) throw new Error('Failed to fetch challenge');
         const data = await response.json();
         setChallenge(data);
+
+        // Determine if challenge is withdrawable
+        // Check if current time is past the challenge end date
+        const currentTime = new Date().getTime();
+        const endTime = new Date(data.endDate).getTime();
+        const hasReachedGoal = data.currentAmount >= data.goalAmount;
+
+        setIsWithdrawable(hasReachedGoal && currentTime >= endTime);
       } catch (error) {
         console.error('Error fetching challenge:', error);
       } finally {
@@ -112,7 +136,9 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
     );
   }
 
-  const progressPercentage = (challenge.currentAmount / challenge.goalAmount) * 100;
+  // Calculate progress percentage based on user's contribution from blockchain
+  const userContribution = parseFloat(contribution ?? '0') || 0;
+  const userTarget = parseFloat(target ?? '0') || (challenge?.goalAmount || 0);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#F9FAFB]">
@@ -124,46 +150,40 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
         </h1>
 
         {/* Invite Buttons */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
-          {/* <button
-            onClick={() => setIsInviteDialogOpen(true)}
-            className="p-4 bg-white rounded-full shadow-lg border-2 border-[#00C896] text-[#333333] font-medium hover:bg-[#00C896] hover:text-white transition-colors duration-200"
-          >
-            Search Friends
-          </button> */}
+        <div className="grid grid-cols-1  gap-4 mb-8">
           <button
             onClick={() => setIsInviteLinkDialogOpen(true)}
             className="p-4 bg-white rounded-full shadow-lg border-2 border-[#FCA311] text-[#333333] font-medium hover:bg-[#FCA311] hover:text-white transition-colors duration-200"
           >
-            Share Link
+            Challenge a Friend!
           </button>
         </div>
+
+        {/* Vault Balance Section */}
+        <section className="mb-8">
+          <VaultBalance challengeId={Number(params.id)} />
+        </section>
 
         {/* Progress Section */}
         <section className="mb-8 bg-white p-6 rounded-xl shadow-sm">
           <h2 className="text-lg font-semibold text-[#14213D] mb-4">Your Progress</h2>
-          {challenge.currentAmount > 0 ? (
+          {userContribution > 0 ? (
             <>
               <p className="text-2xl font-bold text-[#00C896] mb-2">
-                ${challenge.currentAmount.toLocaleString()} Saved
+                ${userContribution.toLocaleString()} Saved 
               </p>
               <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#00C896] transition-all duration-500"
-                  style={{ width: `${Math.min(progressPercentage, 100)}%` }}
+                  style={{ width: `${Math.min(progressPercentage || 0, 100)}%` }}
                 />
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                Goal: ${challenge.goalAmount.toLocaleString()}
+                {progressPercentage ? `${progressPercentage.toFixed(2)}% of goal achieved` : 'Progress tracking'}
               </p>
             </>
           ) : (
-            <Button
-              className="w-full bg-[#00C896] hover:bg-[#00B085] text-white py-6 rounded-xl text-lg font-semibold"
-              onClick={() => {/* TODO: Add savings flow */}}
-            >
-              Add your First Savings now
-            </Button>
+            <p className="text-sm text-gray-500 mt-2">No progress data available</p>
           )}
         </section>
 
@@ -173,9 +193,8 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
           {challenge.participants.length > 0 ? (
             <div className="space-y-4">
               {challenge.participants.map((participant) => (
-                <div key={participant.fid} >
-                  <ParticipantDetail key={participant.fid} fid={participant.fid} currentAmount={participant.currentAmount}  />
-                  
+                <div key={participant.fid}>
+                  <ParticipantDetail key={participant.fid} fid={participant.fid} currentAmount={participant.currentAmount} />
                 </div>
               ))}
             </div>
@@ -206,58 +225,131 @@ export default function ChallengeProgressPage({ params }: { params: { id: string
         </div>
       </nav>
 
-      {/* Search Friends Dialog */}
+      {/* Search Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
-        <DialogContent className="bg-[#F9FAFB] sm:max-w-[425px]">
+        <DialogContent className="bg-white p-6 rounded-xl max-w-md mx-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-[#14213D]">
+            <DialogTitle className="text-xl font-semibold text-[#14213D] mb-4">
               Invite Friends
             </DialogTitle>
           </DialogHeader>
-          <div className="py-4">
-            <Input
-              type="text"
-              placeholder="Search Farcaster users..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="mb-4"
-            />
-            <div className="space-y-3 max-h-[300px] overflow-y-auto">
-              {searchResults.map((user) => (
-                <div key={user.fid} className="flex items-center justify-between p-3 bg-white rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Image
-                      src={user.pfpUrl ?? ''}
-                      alt={user.username ?? ''}
-                      width={40}
-                      height={40}
-                      className="rounded-full"
-                    />
+          <Input
+            type="text"
+            placeholder="Search by username..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="mb-4"
+          />
+          <div className="space-y-2 max-h-60 overflow-y-auto">
+            {searchResults.length > 0 ? (
+              searchResults.map((user) => (
+                <div
+                  key={user.fid}
+                  className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer"
+                  onClick={() => handleInvite(user)}
+                >
+                  <div className="flex items-center">
+                    {user.pfpUrl && (
+                      <Image
+                        src={user.pfpUrl}
+                        alt={user.displayName || `User ${user.fid}`}
+                        width={40}
+                        height={40}
+                        className="rounded-full mr-3"
+                      />
+                    )}
                     <div>
-                      <p className="font-medium text-[#14213D]">{user.displayName}</p>
-                      <p className="text-sm text-gray-500">@{user.username}</p>
+                      <p className="font-medium text-[#14213D]">
+                        {user.displayName || `User ${user.fid}`}
+                      </p>
+                      {user.username && (
+                        <p className="text-sm text-gray-500">@{user.username}</p>
+                      )}
                     </div>
                   </div>
-                  <Button
-                    onClick={() => handleInvite(user)}
-                    className="bg-[#00C896] hover:bg-[#00B085] text-white px-4 py-2 rounded-lg"
-                  >
+                  <button className="text-[#00C896] hover:text-[#00B085]">
                     Invite
-                  </Button>
+                  </button>
                 </div>
-              ))}
-            </div>
+              ))
+            ) : searchQuery.length >= 3 ? (
+              <p className="text-center text-gray-500 py-4">No users found</p>
+            ) : (
+              <p className="text-center text-gray-500 py-4">
+                Type at least 3 characters to search
+              </p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Share Link Dialog */}
+      {/* Invite Link Dialog */}
       <InviteLinkDialog
         open={isInviteLinkDialogOpen}
-        onOpenChange={setIsInviteLinkDialogOpen}
-        challengeId={params.id}
-        challengeName={challenge.name}
+        onOpenChange={() => setIsInviteLinkDialogOpen(false)}
+        challengeId={Number(params.id)}
+        challengeName={challenge?.name || ''}
       />
+
+      {/* Deposit Dialog */}
+      <DepositDialog
+        isOpen={isDepositDialogOpen}
+        onClose={() => setIsDepositDialogOpen(false)}
+        challengeId={Number(params.id)}
+      />
+
+      {/* Withdraw Dialog */}
+      <Dialog open={isWithdrawDialogOpen} onOpenChange={() => setIsWithdrawDialogOpen(false)}>
+        <DialogContent className="bg-[#F9FAFB] p-6 rounded-xl max-w-md mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-[#14213D] mb-4">
+              Withdraw Funds
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {!isWithdrawable ? (
+              <div className="bg-[#FCA311] bg-opacity-10 border border-[#FCA311] rounded-lg p-4 text-center">
+                <p className="text-[#333333] mb-2">
+                  Withdrawal is not available yet.
+                </p>
+                <p className="text-sm text-[#14213D]">
+                  You can withdraw after reaching your goal and the challenge end date.
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-[#333333]">
+                  You've successfully reached your savings goal! Would you like to withdraw your funds?
+                </p>
+
+                <div className="flex space-x-4">
+                  <Button
+                    className="flex-1 bg-[#1DB954] hover:bg-[#19a85a] text-white py-3 rounded-xl text-lg font-semibold"
+                    onClick={async () => {
+                      try {
+                        await withdraw(Number(params.id));
+                        setIsWithdrawDialogOpen(false);
+                      } catch (error) {
+                        console.error('Withdrawal error:', error);
+                      }
+                    }}
+                  >
+                    Confirm Withdrawal
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1 border-[#14213D] text-[#14213D] hover:bg-gray-100 py-3 rounded-xl text-lg font-semibold"
+                    onClick={() => setIsWithdrawDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

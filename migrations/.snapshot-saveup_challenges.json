@@ -88,9 +88,9 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "serial",
+          "type": "int",
           "unsigned": false,
-          "autoincrement": true,
+          "autoincrement": false,
           "primary": true,
           "nullable": false,
           "mappedType": "integer"
@@ -167,6 +167,16 @@
           "scale": 0,
           "default": "0",
           "mappedType": "decimal"
+        },
+        "transaction_hash": {
+          "name": "transaction_hash",
+          "type": "varchar(66)",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "length": 66,
+          "mappedType": "string"
         },
         "created_at": {
           "name": "created_at",

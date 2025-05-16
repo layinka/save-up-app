@@ -6,7 +6,7 @@ import { ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
 interface InviteLinkDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  challengeId: string;
+  challengeId: number;
   challengeName: string;
 }
 

@@ -5,6 +5,7 @@ import './globals.css';
 import { Providers } from './providers';
 import React from 'react';
 import { SharedLayout } from './components/SharedLayout';
+import { Toaster } from 'react-hot-toast';
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -46,6 +47,37 @@ export default function RootLayout({
       <body className="bg-background">
         <Providers>
           <SharedLayout>{children}</SharedLayout>
+          <Toaster position="top-center" toastOptions={{
+            style: {
+              background: '#F9FAFB', // Snow White
+              color: '#333333', // Charcoal
+              border: '1px solid #E5E7EB',
+              borderRadius: '8px',
+            },
+            success: {
+              style: {
+                borderLeft: '4px solid #1DB954', // Success/Positive Emerald Green
+              },
+              iconTheme: {
+                primary: '#1DB954',
+                secondary: '#FFFFFF',
+              },
+            },
+            error: {
+              style: {
+                borderLeft: '4px solid #FF6B6B', // Error/Warning Coral Red
+              },
+              iconTheme: {
+                primary: '#FF6B6B',
+                secondary: '#FFFFFF',
+              },
+            },
+            loading: {
+              style: {
+                borderLeft: '4px solid #FCA311', // Accent Soft Yellow
+              },
+            },
+          }} />
         </Providers>
       </body>
     </html>

@@ -9,6 +9,12 @@ import { YieldBanner } from '../components/YieldBanner';
 import { ActivityFeedPreview } from '../components/ActivityFeedPreview';
 import { BottomNavBar } from '../components/BottomNavBar';
 import { ChallengeCardProps } from '../components/ChallengeCard';
+import { useAccount, useReadContract } from 'wagmi';
+import { USDT_DECIMALS, vaultAddress } from '../utils/chain-details';
+import { SaveUpVault_ABI } from '@/lib/contracts';
+import { formatUnits } from 'viem';
+import { useVault } from '../hooks/useVault';
+import { useMiniKit } from '@coinbase/onchainkit/minikit';
 
 // Type definition for the data structure coming from the API (matches db/schema.ts)
 type ChallengeFromAPI = {
@@ -26,6 +32,7 @@ type ChallengeFromAPI = {
 
 // Keep the main LandingPage component structure
 const LandingPage: React.FC = () => {
+  const { context } = useMiniKit();
   // State for challenges, loading, and errors
   const [challenges, setChallenges] = useState<ChallengeCardProps[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -36,7 +43,11 @@ const LandingPage: React.FC = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await fetch('/api/challenges');
+        const response = await fetch('/api/challenges', {
+          headers: {
+            ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+          },
+        });
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -57,21 +68,50 @@ const LandingPage: React.FC = () => {
     fetchChallenges();
   }, []); // Empty dependency array ensures this runs only once on mount
 
+  //insert code to allow user to approve usdt for contract savupvault here
+  const {approveUsdtSpending}=useVault();
+  
   // State for earned yield (replace with actual data fetching later)
-  const [earnedYield, setEarnedYield] = useState<string>("$12.34");
+  // const [earnedYield, setEarnedYield] = useState<string>("$12.34");
 
   // State for active navigation tab
   const [activeNavTab, setActiveNavTab] = useState('Home');
 
+  const { address } = useAccount();
+
+  const { data: participantEarnings } = useReadContract({
+      address: vaultAddress,
+      abi: SaveUpVault_ABI,
+      functionName: 'getUserEarnings',
+      // @ts-ignore - TypeScript expects a readonly array with 1 element, but we need 2 elements
+      args: address && vaultAddress ? [address as Address, vaultAddress] : undefined,
+      // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
+      enabled: !!address,
+    });
+
   // Handlers
   const handleChallengeClick = (id: string) => {
     console.log(`Challenge ${id} clicked`);
+
     // TODO: Navigate to challenge details page using the challenge ID (which is now string)
   };
 
-  const handleActionClick = (action: string) => {
+  const handleActionClick = async (action: string) => {
     console.log(`${action} clicked`);
     // TODO: Handle action (e.g., open modal, navigate)
+    if (action === 'Start New Goal') {
+      //redirect to goals/start
+      console.log('Start New Goal clicked');
+      // window.location.href= '/goals/start';
+    }else if (action === 'Join Challenge') {
+      await approveUsdtSpending('100');
+      //redirect to challenges
+      // window.location.href= '/challenges';
+    }else if (action === 'Invite Friends') {
+      //redirect to invite
+      // window.location.href= '/invite';
+    }
+    
   };
 
   const handleNavClick = (tab: string) => {
@@ -92,7 +132,7 @@ const LandingPage: React.FC = () => {
           <ChallengesSection challenges={challenges} onChallengeClick={handleChallengeClick} />
         )}
         <QuickActions onActionClick={handleActionClick} />
-        <YieldBanner earnedYield={earnedYield} />
+        {participantEarnings && <YieldBanner earnedYield={ formatUnits(participantEarnings, USDT_DECIMALS)} />}
         <ActivityFeedPreview />
       </main>
 

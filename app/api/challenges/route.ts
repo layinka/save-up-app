@@ -9,6 +9,7 @@ import { validateFrameMessage, AuthenticatedRequest } from '@/lib/auth';
 // Zod schema for validating the request body (can remain largely the same)
 const createChallengeSchema = z.object({
   // User fields
+  challengeId: z.number(),
   username: z.string().optional(),
   displayName: z.string().optional(),
   profilePictureUrl: z.string().optional(),
@@ -18,6 +19,8 @@ const createChallengeSchema = z.object({
   goalAmount: z.number().int().positive({ message: "Goal amount must be a positive integer" }),
   targetDate: z.string().datetime().optional(), // Expect ISO 8601 string
   creatorFid: z.string().optional(),
+  // Blockchain fields
+  transactionHash: z.string().optional(),
 });
 
 async function handleCreateChallenge(request: AuthenticatedRequest) {
@@ -31,8 +34,8 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
       return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
     }
 
-    const { name, description, goalAmount, targetDate,  username, displayName, profilePictureUrl } = validationResult.data;
-    const creatorFid=request.fid;
+    const {challengeId, name, description, goalAmount, targetDate, username, displayName, profilePictureUrl, transactionHash } = validationResult.data;
+    const creatorFid = request.fid;
     if (!creatorFid) {
       return NextResponse.json({ error: 'Creator FID is required' }, { status: 400 });
     }
@@ -47,12 +50,14 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
 
     // Create challenge
     const challenge = em.create(Challenge, {
+      id: challengeId,
       name,
       description: description ?? null, // Ensure null if undefined
       goalAmount,
       targetDate: targetDate ? new Date(targetDate) : null,
       creator: user,
-      totalAmountContributed: 0
+      totalAmountContributed: 0,
+      transactionHash: transactionHash ?? null
     });
 
     // Create participant entry for creator
@@ -86,8 +91,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // const fid = request.headers.get('fid');
+
   const authenticatedRequest = request as AuthenticatedRequest;
-  authenticatedRequest.fid = fid;
+  authenticatedRequest.fid = fid ? +fid : undefined;
 
   return await withRequestContext(async () => await handleCreateChallenge(authenticatedRequest));
 }
@@ -116,6 +123,7 @@ export async function GET(request: Request) {
   if (!isValid || !fid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  // const fid = request.headers.get('fid');
 
   return await withRequestContext(async () => await handleGetChallenges(Number(fid)));
 }

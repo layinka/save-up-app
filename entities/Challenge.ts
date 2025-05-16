@@ -5,10 +5,10 @@ import { Participant } from './Participant';
 @Entity({ tableName: 'challenges' }) // Explicitly set table name if needed
 export class Challenge {
 
-  [OptionalProps]?: 'createdAt' | 'updatedAt' | 'currentAmount' |  'description' | 'targetDate';
+  [OptionalProps]?: 'createdAt' | 'updatedAt' | 'currentAmount' |  'description' | 'targetDate' | 'transactionHash';
 
-  @PrimaryKey()
-  id!: number; // Auto-incrementing primary key by default
+  @PrimaryKey({ autoincrement: false })
+  id!: number; 
 
   @Property({ length: 256 })
   name!: string;
@@ -35,6 +35,9 @@ export class Challenge {
 
   @Property({ type: types.decimal, default: 0 })
   totalAmountContributed: number = 0;
+  
+  @Property({ type: 'string', length: 66, nullable: true })
+  transactionHash?: string;
 
   @Property()
   createdAt: Date = new Date();
