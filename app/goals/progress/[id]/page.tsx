@@ -16,6 +16,7 @@ import { SaveUpVault_ABI } from '@/lib/contracts';
 import { vaultAddress } from '@/app/utils/chain-details';
 import { useUserProgress } from '@/app/hooks/useUserProgress';
 import sdk from '@farcaster/frame-sdk';
+import { format } from 'date-fns';
 
 interface Participant {
   fid: number;
@@ -173,7 +174,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
 
           <button
             onClick={async () => await sdk.actions.composeCast({ 
-              text: `"Savings mode activated! I'm challenging myself to save ${challenge.goalAmount} by ${challenge.targetDate}. Who's with me? #SavingsChallenge #FinancialFreedom"`,
+              text: `"Savings mode activated! I'm challenging myself to save ${challenge.goalAmount} by ${format(new Date(challenge.targetDate), 'MMM d, yyyy')}. Who's with me? #SavingsChallenge #FinancialFreedom"`,
               embeds: [],
             })}
             className="p-4 bg-white rounded-full shadow-lg border-2 border-[#FCA311] text-[#333333] font-medium hover:bg-[#FCA311] hover:text-white transition-colors duration-200"
@@ -204,9 +205,10 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
               <p className="text-sm text-gray-500 mt-2">
                 {progressPercentage ? `${progressPercentage.toFixed(2)}% of goal achieved` : 'Progress tracking'}
               </p>
+              <p className="text-sm text-gray-600 mb-2">Target Date: {format(new Date(challenge.targetDate), 'MMM d, yyyy')}</p>
             </>
           ) : (
-            <p className="text-sm text-gray-500 mt-2">No progress data available</p>
+            <p className="text-sm text-gray-500 mt-2">You have $0. Start Saving Now</p>
           )}
         </section>
 
@@ -217,7 +219,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
             <div className="space-y-4">
               {challenge.participants.map((participant) => (
                 <div key={participant.fid}>
-                  <ParticipantDetail key={participant.fid} fid={participant.fid} currentAmount={participant.currentAmount} />
+                  <ParticipantDetail viewerFid={context?.user?.fid} key={participant.fid} fid={participant.fid} currentAmount={participant.currentAmount} />
                 </div>
               ))}
             </div>
@@ -319,6 +321,8 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
         isOpen={isDepositDialogOpen}
         onClose={() => setIsDepositDialogOpen(false)}
         challengeId={Number(params.id)}
+        challengeAmount={challenge?.goalAmount || 0}
+        challengeName={challenge?.name || ''}
       />
 
       {/* Withdraw Dialog */}

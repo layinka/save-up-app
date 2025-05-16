@@ -17,12 +17,13 @@ export interface User {
 export interface ParticipantDetailProps {
   fid: number;
   currentAmount: number;
+  viewerFid?: number;
 }
 
 
 
 
-export function ParticipantDetail({ fid, currentAmount }: ParticipantDetailProps) {
+export function ParticipantDetail({ fid, currentAmount, viewerFid }: ParticipantDetailProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +32,13 @@ export function ParticipantDetail({ fid, currentAmount }: ParticipantDetailProps
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const response = await fetch(`/api/users/${fid}`);
+        const response = await fetch(`/api/users/${fid}`,
+          {
+            headers: {
+              'fid': viewerFid?.toString() || '',
+            },
+          }
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch user details');
         }
@@ -90,8 +97,8 @@ export function ParticipantDetail({ fid, currentAmount }: ParticipantDetailProps
         {/* User Info */}
         <div className="flex-1">
           <div className="flex items-center space-x-2">
-            <h3 className="font-semibold text-[#14213D]">{user.displayName}</h3>
-            <span className="text-sm text-gray-500">@{user.username}</span>
+            <h3 className="font-semibold text-[#14213D]">{viewerFid === fid ? 'You' : user.displayName}</h3>
+            <span className="text-sm text-gray-500">{viewerFid === fid ? 'You' : `@${user.username}`}</span>
           </div>
 
           {/* Stats */}

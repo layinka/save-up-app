@@ -10,11 +10,13 @@ interface DepositDialogProps {
   isOpen: boolean;
   onClose: () => void;
   challengeId: number;
+  challengeAmount: number;
+  challengeName: string;
 }
 
-export function DepositDialog({ isOpen, onClose, challengeId }: DepositDialogProps) {
+export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, challengeName }: DepositDialogProps) {
   const [amount, setAmount] = useState<string>('');
-  const [step, setStep] = useState<'approve' | 'deposit'>('approve');
+  const [step, setStep] = useState<'approve' | 'deposit' | 'ready'>('approve');
   const [error, setError] = useState<string | null>(null);
   
   const { 
@@ -34,23 +36,25 @@ export function DepositDialog({ isOpen, onClose, challengeId }: DepositDialogPro
   useEffect(() => {
     if (isOpen) {
       setAmount('');
-      setStep(isApproved ? 'deposit' : 'approve');
+      setError(null);
+      setStep('approve');
     }
-  }, [isOpen, isApproved]);
+  }, [isOpen]);
   
   // Update step when approval status changes or amount changes
   useEffect(() => {
-    // If the user has approved enough USDT for the current amount, show deposit step
-    // Otherwise, show approve step
     const amountValue = parseFloat(amount) || 0;
     const allowanceValue = parseFloat(allowanceData) || 0;
     
-    if (amountValue > 0 && allowanceValue >= amountValue) {
-      setStep('deposit');
-    } else {
-      setStep('approve');
+    if (amountValue > 0) {
+      if (allowanceValue >= amountValue) {
+        setStep('ready');
+        setError(null);
+      } else {
+        setStep('approve');
+      }
     }
-  }, [isApproved, amount, allowanceData]);
+  }, [amount, allowanceData]);
   
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -61,7 +65,6 @@ export function DepositDialog({ isOpen, onClose, challengeId }: DepositDialogPro
   };
   
   const handleApprove = async () => {
-    console.log(' approving USDT:', isApproveLoading);
     if (!amount || isApproveLoading ) return;
     if(isApproveError){
       console.error('Error approving USDT:', isApproveError);
@@ -167,9 +170,14 @@ export function DepositDialog({ isOpen, onClose, challengeId }: DepositDialogPro
           )}
           
           {step === 'approve' && (
-            <p className="text-xs text-gray-500 italic">
-              You need to approve SaveUp to use your USDT before depositing. This is a one-time approval for the amount you specify.
-            </p>
+            <div className="space-y-2">
+              <p className="text-xs text-gray-500 italic">
+                You need to approve SaveUp to use your USDT before depositing. This is a one-time approval for the amount you specify.
+              </p>
+              <p className="text-xs text-[#FCA311] font-semibold">
+                ⚠️ Approve the exact amount you want to deposit
+              </p>
+            </div>
           )}
           
           {step === 'approve' ? (
@@ -180,13 +188,20 @@ export function DepositDialog({ isOpen, onClose, challengeId }: DepositDialogPro
             >
               {isApproveLoading ? 'Approving...' : `Approve ${amount || '0'} USDT`}
             </Button>
-          ) : (
+          ) : step === 'ready' ? (
             <Button
               className="w-full bg-[#00C896] hover:bg-[#00B085] text-white py-3 rounded-xl text-lg font-semibold"
               onClick={handleDeposit}
               disabled={!amount || isDepositLoading || parseFloat(amount) <= 0 }
             >
-              {isDepositLoading ? 'Processing...' : challengeId ? 'Contribute' : 'Deposit'}
+              {isDepositLoading ? 'Processing...' : challengeId ? `Contribute ${amount} USDT` : `Deposit ${amount} USDT`}
+            </Button>
+          ) : (
+            <Button
+              className="w-full bg-gray-300 text-gray-500 py-3 rounded-xl text-lg font-semibold"
+              disabled
+            >
+              Waiting for Approval
             </Button>
           )}
           

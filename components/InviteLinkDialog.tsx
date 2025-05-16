@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/app/components/DemoComponents';
 import { ClipboardIcon, CheckIcon } from '@heroicons/react/24/outline';
+import sdk from '@farcaster/frame-sdk';
 
 interface InviteLinkDialogProps {
   open: boolean;
@@ -61,13 +62,17 @@ export function InviteLinkDialog({ open, onOpenChange, challengeId, challengeNam
               You can also share this challenge directly on Farcaster:
             </p>
             <Button
-              onClick={() => {
-                // TODO: Implement Farcaster share
-                window.open(
-                  `https://warpcast.com/~/compose?text=Join my savings challenge: ${challengeName}! 💰\n\n${inviteLink}`,
-                  '_blank'
-                );
-              }}
+              onClick={async () => await sdk.actions.composeCast({ 
+                text: `"Join my savings challenge: ${challengeName}! 💰\n\n${inviteLink}.\n #SavingsChallenge #FinancialFreedom"`,
+                embeds: [],
+              })}
+              // onClick={() => {
+              //   // TODO: Implement Farcaster share
+              //   window.open(
+              //     `https://warpcast.com/~/compose?text=Join my savings challenge: ${challengeName}! 💰\n\n${inviteLink}`,
+              //     '_blank'
+              //   );
+              // }}
               className="w-full mt-3 bg-[#00C896] hover:bg-[#00B085] text-white py-2 rounded-lg"
             >
               Share on Farcaster

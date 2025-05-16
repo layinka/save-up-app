@@ -4,7 +4,7 @@ import { Challenge } from '@/entities/Challenge';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: { id: number } }
 ) {
   try {
     const { amount } = await request.json();
@@ -13,7 +13,7 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid amount' }, { status: 400 });
     }
 
-    const challengeId = parseInt(params.id, 10);
+    const challengeId = params.id;
 
     // Get the EntityManager
     const em = await getEm();
