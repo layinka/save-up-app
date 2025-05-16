@@ -27,7 +27,7 @@ const config = {
   // Neon specific settings for serverless environments
   driverOptions: {
     connection: {
-      ssl: false, // process.env.NODE_ENV === 'production', // Neon typically requires SSL
+      ssl: process.env.NODE_ENV === 'production', // Neon typically requires SSL
     }
   },
   migrations: {
