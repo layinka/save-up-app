@@ -57,7 +57,11 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
     // Fetch challenge data
     const fetchChallenge = async () => {
       try {
-        const response = await fetch(`/api/challenges/${params.id}`);
+        const response = await fetch(`/api/challenges/${params.id}`, {
+          headers: {
+            ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch challenge');
         const data = await response.json();
         setChallenge(data);
@@ -89,7 +93,11 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
     }
 
     try {
-      const response = await fetch(`/api/search/users?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`/api/search/users?q=${encodeURIComponent(query)}`, {
+        headers: {
+          ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+        }
+      });
       if (!response.ok) throw new Error('Failed to search users');
       const results = await response.json();
       setSearchResults(results);
@@ -103,7 +111,10 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
     try {
       const response = await fetch(`/api/challenges/${params.id}/participants`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+         },
         body: JSON.stringify({ fid: participant.fid }),
       });
 

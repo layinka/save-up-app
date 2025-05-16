@@ -148,49 +148,7 @@ export async function POST(request: Request) {
 
 // --- GET Handler --- 
 async function handleGetChallenges(userId?: number) {
-   // Create a public client to interact with the blockchain
-   const publicClient = createPublicClient({
-    chain: base,
-    transport: http(),
-  });
-  const receipt = await publicClient.waitForTransactionReceipt({ hash: '0xb781dfe97fc9be3d5923b11d11711c98183d4de2d6119ab43ed6afcf17d2f6c5'});
-    console.log('Transaction receipt received:', receipt, receipt.logs)
-    
-    // Define ChallengeCreated event ABI
-    const challengeCreatedABI = [
-      {
-        type: 'event',
-        name: 'ChallengeCreated',
-        inputs: [
-          { name: 'id', type: 'uint256', indexed: true },
-          { name: 'creator', type: 'address', indexed: true },
-          { name: 'targetAmount', type: 'uint256', indexed: false },
-          { name: 'endTime', type: 'uint256', indexed: false }
-        ]
-      }
-    ] as const;
-
-    // Extract challenge ID from transaction receipt
-    const challengeEvent = receipt.logs
-      .map((log) => {
-        try {
-          const decoded = decodeEventLog({
-            abi: challengeCreatedABI,
-            data: log.data,
-            topics: log.topics
-          });
-          return decoded.eventName === 'ChallengeCreated' ? decoded.args : null;
-        } catch {
-          return null;
-        }
-      })
-      .find((args) => args !== null);
-
-    console.log('Challenge event:', challengeEvent)
-
-
-
-    
+   
   const em = await getEm(); // Get the EntityManager
   try {
     // Find challenges based on user participation
