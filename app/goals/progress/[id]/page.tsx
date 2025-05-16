@@ -185,7 +185,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
 
         {/* Vault Balance Section */}
         <section className="mb-8">
-          <VaultBalance challengeId={Number(params.id)} challengeAmount={challenge?.goalAmount || 0} challengeName={challenge?.name || ''} />
+          <VaultBalance address={address} challengeId={Number(params.id)} challengeAmount={challenge?.goalAmount || 0} challengeName={challenge?.name || ''} />
         </section>
 
         {/* Progress Section */}
@@ -318,6 +318,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
 
       {/* Deposit Dialog */}
       <DepositDialog
+        address={address}
         isOpen={isDepositDialogOpen}
         onClose={() => setIsDepositDialogOpen(false)}
         challengeId={Number(params.id)}

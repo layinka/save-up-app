@@ -4,11 +4,13 @@ import { useEffect, useState } from 'react';
 import { useVault } from '@/app/hooks/useVault';
 import { Button } from '@/app/components/DemoComponents';
 import { DepositDialog } from '@/app/components/DepositDialog';
+import { Address } from 'viem';
 
 interface VaultBalanceProps {
   challengeId?: number;
   challengeAmount?: number;
   challengeName?: string;
+  address?: Address;
 }
 
 export function VaultBalance({ challengeId, challengeAmount, challengeName }: VaultBalanceProps) {
@@ -66,6 +68,7 @@ export function VaultBalance({ challengeId, challengeAmount, challengeName }: Va
       </div>
       
       <DepositDialog
+        address={address}
         isOpen={isDepositDialogOpen}
         onClose={() => setIsDepositDialogOpen(false)}
         challengeId={challengeId || 0}

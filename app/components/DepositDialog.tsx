@@ -18,13 +18,14 @@ interface DepositDialogProps {
   challengeId: number;
   challengeAmount: number;
   challengeName: string;
+  address?: Address;
 }
 
-export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, challengeName }: DepositDialogProps) {
+export function DepositDialog({address, isOpen, onClose, challengeId, challengeAmount, challengeName }: DepositDialogProps) {
   const [amount, setAmount] = useState<string>('');
   const [step, setStep] = useState<'approve' | 'deposit' >('approve');
   const [error, setError] = useState<string | null>(null);
-  const { address } = useAccount();
+  // const { address } = useAccount();
   const { context } = useMiniKit();
 
   const { data: approveHash, writeContractAsync: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
