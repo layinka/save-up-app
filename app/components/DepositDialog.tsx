@@ -9,6 +9,8 @@ import { useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { USDT_DECIMALS, usdtAddress, vaultAddress } from '../utils/chain-details';
 import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
 import { sleep } from '@/lib/utils';
+import { SaveUpVault_ABI } from '@/lib/contracts';
+import { useMiniKit } from '@coinbase/onchainkit/minikit';
 
 interface DepositDialogProps {
   isOpen: boolean;
@@ -23,6 +25,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
   const [step, setStep] = useState<'approve' | 'deposit' >('approve');
   const [error, setError] = useState<string | null>(null);
   const { address } = useAccount();
+  const { context } = useMiniKit();
 
   const { data: approveHash, writeContractAsync: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
   const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
@@ -120,36 +123,45 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       setError('Please enter a valid deposit amount');
       return;
     }
+    const amountInWei = parseUnits(amount, USDT_DECIMALS);
 
     // Check if user has sufficient USDT balance
-    const usdtBalanceValue = parseFloat(usdtBalance);
-    if (amountValue > usdtBalanceValue) {
+    const usdtBalanceValue = parseFloat(formatUnits(usdtBalance??BigInt(0), USDT_DECIMALS));
+    if (amountInWei > (usdtBalance??BigInt(0))) {
       setError(`Insufficient USDT balance. You have ${usdtBalanceValue.toFixed(2)} USDT available`);
       return;
     }
 
     // Check if user has sufficient allowance
-    const allowanceValue = parseFloat(allowanceData);
-    if (amountValue > allowanceValue) {
+    
+    if (amountInWei > (allowanceData??BigInt(0))) {
       setError(`Insufficient allowance. Please approve ${amountValue.toFixed(2)} USDT`);
       return;
     }
 
     // Prevent multiple submissions
-    if (isDepositLoading || isDepositError) {
+    if (isDepositPending || isDepositError) {
       setError('Deposit in progress. Please wait.');
       return;
     }
 
     try {
       // First, deposit to the vault
-      await deposit(challengeId, amount);
+      
+            
+      let tx = await depositToVault({
+        address: vaultAddress,
+        abi: SaveUpVault_ABI,
+        functionName: 'contribute',
+        args: [BigInt(challengeId), amountInWei],
+      });
       
       // Then update challenge amount in the backend
       const response = await fetch(`/api/challenges/${challengeId}/deposit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'fid': context?.user?.fid?.toString()??'',
         },
         body: JSON.stringify({
           amount: amountValue,
