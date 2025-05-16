@@ -5,6 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/app/components/DemoComponents';
 import { useVault } from '@/app/hooks/useVault';
+import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { USDT_DECIMALS, usdtAddress, vaultAddress } from '../utils/chain-details';
+import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
+import { sleep } from '@/lib/utils';
 
 interface DepositDialogProps {
   isOpen: boolean;
@@ -16,21 +20,42 @@ interface DepositDialogProps {
 
 export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, challengeName }: DepositDialogProps) {
   const [amount, setAmount] = useState<string>('');
-  const [step, setStep] = useState<'approve' | 'deposit' | 'ready'>('approve');
+  const [step, setStep] = useState<'approve' | 'deposit' >('approve');
   const [error, setError] = useState<string | null>(null);
+  const { address } = useAccount();
+
+  const { data: approveHash, writeContractAsync: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
+  const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
   
-  const { 
-    usdtBalance, 
-    isApproved, 
-    isLoading, 
-    isApproveLoading,
-    isApproveError,
-    isDepositLoading,
-    isDepositError, 
-    approveUsdtSpending, 
-    deposit,
-    allowanceData
-  } = useVault();
+  const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
+      address: usdtAddress,
+      abi: erc20Abi,
+      functionName: 'allowance',
+      // @ts-ignore - TypeScript expects a readonly array with 1 element, but we need 2 elements
+      args: address && vaultAddress ? [address as Address, vaultAddress] : undefined,
+      // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
+      enabled: !!address,
+  });
+  const { data: usdtBalance ,refetch: refetchUsdtBalance} = useReadContract({
+      address: usdtAddress,
+      abi: erc20Abi,
+      functionName: 'balanceOf',
+      args: address ? [address as Address] : undefined,
+      // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
+      enabled: !!address,
+  });
+  // const { 
+  //   // usdtBalance, 
+  //   // isApproved, 
+  //   // isLoading, 
+  //   // isApproveLoading,
+  //   // isApproveError,
+  //   isDepositLoading,
+  //   isDepositError, 
+  //   // approveUsdtSpending, 
+  //   deposit,
+  //   allowanceData
+  // } = useVault();
   
   // Reset state when dialog opens/closes
   useEffect(() => {
@@ -43,12 +68,15 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
   
   // Update step when approval status changes or amount changes
   useEffect(() => {
-    const amountValue = parseFloat(amount) || 0;
-    const allowanceValue = parseFloat(allowanceData) || 0;
+    if(!allowanceData){
+      return;
+    }
+    const amountValue = +formatUnits(BigInt(amount??'0'), USDT_DECIMALS) || 0;
+    const allowanceValue = +formatUnits(allowanceData, USDT_DECIMALS) || 0;
     
     if (amountValue > 0) {
       if (allowanceValue >= amountValue) {
-        setStep('ready');
+        setStep('deposit');
         setError(null);
       } else {
         setStep('approve');
@@ -65,12 +93,21 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
   };
   
   const handleApprove = async () => {
-    if (!amount || isApproveLoading ) return;
+    if (!amount || isApprovePending ) return;
     if(isApproveError){
       console.error('Error approving USDT:', isApproveError);
       return;
     }
-    await approveUsdtSpending(amount);
+    let tx = await approveUsdt({
+      address: usdtAddress,
+      abi: erc20Abi,
+      functionName: 'approve',
+      args: [vaultAddress, parseUnits(amount, USDT_DECIMALS)],
+    });
+    if(tx){
+      await sleep(2000);
+      setStep('deposit');
+    }
   };
   
   const handleDeposit = async () => {
@@ -155,8 +192,8 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-[#00C896] focus:border-[#00C896]"
             />
             <div className="text-sm text-gray-500 mt-1 space-y-1">
-              <p>Available: {parseFloat(usdtBalance).toFixed(2)} USDT</p>
-              <p>Allowance: {parseFloat(allowanceData).toFixed(2)} USDT</p>
+              <p>Available: {(+formatUnits(usdtBalance??BigInt(0), USDT_DECIMALS)).toFixed(2)} USDT</p>
+              <p>Allowance: {(+formatUnits(allowanceData??BigInt(0), USDT_DECIMALS)).toFixed(2)} USDT</p>
             </div>
           </div>
           
@@ -184,17 +221,17 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
             <Button
               className="w-full bg-[#FCA311] hover:bg-[#E69200] text-white py-3 rounded-xl text-lg font-semibold"
               onClick={handleApprove}
-              disabled={!amount || isApproveLoading || parseFloat(amount) <= 0 }
+              disabled={!amount || isApprovePending || parseFloat(amount) <= 0 }
             >
-              {isApproveLoading ? 'Approving...' : `Approve ${amount || '0'} USDT`}
+              {isApprovePending ? 'Approving...' : `Approve ${amount || '0'} USDT`}
             </Button>
-          ) : step === 'ready' ? (
+          ) : step === 'deposit' ? (
             <Button
               className="w-full bg-[#00C896] hover:bg-[#00B085] text-white py-3 rounded-xl text-lg font-semibold"
               onClick={handleDeposit}
-              disabled={!amount || isDepositLoading || parseFloat(amount) <= 0 }
+              disabled={!amount || isDepositPending || parseFloat(amount) <= 0 }
             >
-              {isDepositLoading ? 'Processing...' : challengeId ? `Contribute ${amount} USDT` : `Deposit ${amount} USDT`}
+              {isDepositPending ? 'Processing...' : challengeId ? `Contribute ${amount} USDT` : `Deposit ${amount} USDT`}
             </Button>
           ) : (
             <Button
