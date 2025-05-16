@@ -165,7 +165,7 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
 
     try {
       // First, deposit to the vault
-      
+      console.log('depositing to vault', amountInWei, challengeId, vaultAddress);
             
       let tx = await depositToVault({
         address: vaultAddress,
