@@ -7,9 +7,11 @@ import { DepositDialog } from '@/app/components/DepositDialog';
 
 interface VaultBalanceProps {
   challengeId?: number;
+  challengeAmount?: number;
+  challengeName?: string;
 }
 
-export function VaultBalance({ challengeId }: VaultBalanceProps) {
+export function VaultBalance({ challengeId, challengeAmount, challengeName }: VaultBalanceProps) {
   const { vaultBalance, usdtBalance, isLoading, isApproved } = useVault();
   const [isDepositDialogOpen, setIsDepositDialogOpen] = useState(false);
   const [formattedVaultBalance, setFormattedVaultBalance] = useState('0.00');
@@ -67,6 +69,8 @@ export function VaultBalance({ challengeId }: VaultBalanceProps) {
         isOpen={isDepositDialogOpen}
         onClose={() => setIsDepositDialogOpen(false)}
         challengeId={challengeId || 0}
+        challengeAmount={challengeAmount || 0}
+        challengeName={challengeName || ''}
       />
     </div>
   );

@@ -185,7 +185,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
 
         {/* Vault Balance Section */}
         <section className="mb-8">
-          <VaultBalance challengeId={Number(params.id)} />
+          <VaultBalance challengeId={Number(params.id)} challengeAmount={challenge?.goalAmount || 0} challengeName={challenge?.name || ''} />
         </section>
 
         {/* Progress Section */}
