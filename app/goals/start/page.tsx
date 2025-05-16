@@ -72,8 +72,8 @@ export default function StartGoalPage() {
                 console.log('Waiting for transaction receipt...')
                 await sleep(3000);
                 // Explicitly wait for transaction receipt
-                const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, confirmations:1});
-                console.log('Transaction receipt received:', receipt)
+                const receipt = await publicClient.getTransactionReceipt({ hash: tx});
+                console.log('Transaction receipt received:', receipt, receipt.logs)
                 
                 toast.loading('Challenge creation confirmed...', { id: 'create-challenge' });
 

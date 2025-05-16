@@ -5,6 +5,8 @@ import { User } from '@/entities/User';
 import { Participant } from '@/entities/Participant';
 import { getEm, withRequestContext } from '@/lib/db';
 import { validateFrameMessage, AuthenticatedRequest } from '@/lib/auth';
+import { createPublicClient, decodeEventLog, http } from 'viem';
+import { base } from 'wagmi/chains';
 
 // Zod schema for validating the request body (can remain largely the same)
 const createChallengeSchema = z.object({
@@ -33,6 +35,47 @@ async function handleCreateChallenge(request: AuthenticatedRequest) {
     if (!validationResult.success) {
       return NextResponse.json({ error: 'Invalid input', details: validationResult.error.flatten() }, { status: 400 });
     }
+
+    // Create a public client to interact with the blockchain
+    const publicClient = createPublicClient({
+      chain: base,
+      transport: http(),
+    });
+
+    const receipt = await publicClient.getTransactionReceipt({ hash: '0x0'});
+    console.log('Transaction receipt received:', receipt, receipt.logs)
+    
+    // Define ChallengeCreated event ABI
+    const challengeCreatedABI = [
+      {
+        type: 'event',
+        name: 'ChallengeCreated',
+        inputs: [
+          { name: 'id', type: 'uint256', indexed: true },
+          { name: 'creator', type: 'address', indexed: true },
+          { name: 'targetAmount', type: 'uint256', indexed: false },
+          { name: 'endTime', type: 'uint256', indexed: false }
+        ]
+      }
+    ] as const;
+
+    // Extract challenge ID from transaction receipt
+    const challengeEvent = receipt.logs
+      .map((log) => {
+        try {
+          const decoded = decodeEventLog({
+            abi: challengeCreatedABI,
+            data: log.data,
+            topics: log.topics
+          });
+          return decoded.eventName === 'ChallengeCreated' ? decoded.args : null;
+        } catch {
+          return null;
+        }
+      })
+      .find((args) => args !== null);
+
+    console.log('Challenge event:', challengeEvent)
 
     const {challengeId, name, description, goalAmount, targetDate, username, displayName, profilePictureUrl, transactionHash } = validationResult.data;
     const creatorFid = request.fid;
@@ -101,6 +144,49 @@ export async function POST(request: Request) {
 
 // --- GET Handler --- 
 async function handleGetChallenges(userId?: number) {
+   // Create a public client to interact with the blockchain
+   const publicClient = createPublicClient({
+    chain: base,
+    transport: http(),
+  });
+  const receipt = await publicClient.waitForTransactionReceipt({ hash: '0x7c6da4af6395a9c3518527a8198b83c980636dc81d76bad19772dfd21f9de50c'});
+    console.log('Transaction receipt received:', receipt, receipt.logs)
+    
+    // Define ChallengeCreated event ABI
+    const challengeCreatedABI = [
+      {
+        type: 'event',
+        name: 'ChallengeCreated',
+        inputs: [
+          { name: 'id', type: 'uint256', indexed: true },
+          { name: 'creator', type: 'address', indexed: true },
+          { name: 'targetAmount', type: 'uint256', indexed: false },
+          { name: 'endTime', type: 'uint256', indexed: false }
+        ]
+      }
+    ] as const;
+
+    // Extract challenge ID from transaction receipt
+    const challengeEvent = receipt.logs
+      .map((log) => {
+        try {
+          const decoded = decodeEventLog({
+            abi: challengeCreatedABI,
+            data: log.data,
+            topics: log.topics
+          });
+          return decoded.eventName === 'ChallengeCreated' ? decoded.args : null;
+        } catch {
+          return null;
+        }
+      })
+      .find((args) => args !== null);
+
+    console.log('Challenge event:', challengeEvent)
+
+
+
+    
   const em = await getEm(); // Get the EntityManager
   try {
     // Find challenges based on user participation
