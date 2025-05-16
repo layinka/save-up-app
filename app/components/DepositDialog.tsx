@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/app/components/DemoComponents';
 import { useVault } from '@/app/hooks/useVault';
-import { useAccount, useReadContract, useWriteContract } from 'wagmi';
+import { BaseError, useAccount, useReadContract, useWriteContract } from 'wagmi';
 import { USDT_DECIMALS, usdtAddress, vaultAddress } from '../utils/chain-details';
 import { Address, erc20Abi, formatUnits, parseUnits } from 'viem';
 import { sleep } from '@/lib/utils';
@@ -164,16 +164,23 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
     }
 
     try {
+      
       // First, deposit to the vault
       console.log('depositing to vault', amountInWei, challengeId, vaultAddress);
-            
-      let tx = await depositToVault({
-        address: vaultAddress,
-        abi: SaveUpVault_ABI,
-        functionName: 'contribute',
-        args: [BigInt(challengeId), amountInWei],
-        chainId: base.id,
-      });
+        
+      try{
+        let tx = await depositToVault({
+          address: vaultAddress,
+          abi: SaveUpVault_ABI,
+          functionName: 'contribute',
+          args: [BigInt(challengeId), amountInWei],
+          chainId: base.id,
+        });
+      }catch(error){
+        console.log('Error1 depositing to vault in contract:',depositError ,!depositError? '':( (depositError as BaseError).shortMessage || (depositError as BaseError).message), error);
+        // setError('Failed to deposit to vault');
+        // return;
+      }
 
       await sleep(2000);
       
