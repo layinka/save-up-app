@@ -66,11 +66,11 @@
           "mappedType": "datetime"
         }
       },
-      "name": "user",
+      "name": "users",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "user_pkey",
+          "keyName": "users_pkey",
           "columnNames": [
             "id"
           ],
@@ -224,7 +224,7 @@
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user",
+          "referencedTableName": "public.users",
           "updateRule": "cascade"
         }
       },
@@ -283,11 +283,11 @@
           "mappedType": "datetime"
         }
       },
-      "name": "participant",
+      "name": "participants",
       "schema": "public",
       "indexes": [
         {
-          "keyName": "participant_pkey",
+          "keyName": "participants_pkey",
           "columnNames": [
             "user_id",
             "challenge_id"
@@ -300,24 +300,24 @@
       ],
       "checks": [],
       "foreignKeys": {
-        "participant_user_id_foreign": {
-          "constraintName": "participant_user_id_foreign",
+        "participants_user_id_foreign": {
+          "constraintName": "participants_user_id_foreign",
           "columnNames": [
             "user_id"
           ],
-          "localTableName": "public.participant",
+          "localTableName": "public.participants",
           "referencedColumnNames": [
             "id"
           ],
-          "referencedTableName": "public.user",
+          "referencedTableName": "public.users",
           "updateRule": "cascade"
         },
-        "participant_challenge_id_foreign": {
-          "constraintName": "participant_challenge_id_foreign",
+        "participants_challenge_id_foreign": {
+          "constraintName": "participants_challenge_id_foreign",
           "columnNames": [
             "challenge_id"
           ],
-          "localTableName": "public.participant",
+          "localTableName": "public.participants",
           "referencedColumnNames": [
             "id"
           ],

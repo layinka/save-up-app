@@ -2,7 +2,7 @@ import { Entity, ManyToOne, PrimaryKey, Property, types } from '@mikro-orm/core'
 import { User } from './User';
 import { Challenge } from './Challenge';
 
-@Entity()
+@Entity({ tableName: 'participants' })
 export class Participant {
   @ManyToOne(() => User, { primary: true })
   user!: User;
