@@ -10,12 +10,15 @@ import { toast } from 'react-hot-toast';
 import { decodeEventLog } from 'viem';
 import Link  from 'next/link';
 import { BottomNavBar } from '@/app/components/BottomNavBar';
+import { base } from 'viem/chains';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 export default function StartGoalPage() {
   const { context } = useMiniKit();
-  const publicClient = usePublicClient()
+  const publicClient = usePublicClient({
+    chainId: base.id,
+  })
   const { createChallenge, isChallengeLoading, challengeHash } = useVault();
   
   const [amount, setAmount] = useState(100);
@@ -67,7 +70,7 @@ export default function StartGoalPage() {
               if (tx && publicClient) {
                 console.log('Waiting for transaction receipt...')
                 // Explicitly wait for transaction receipt
-                const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+                const receipt = await publicClient.waitForTransactionReceipt({ hash: tx, confirmations:1});
                 console.log('Transaction receipt received:', receipt)
                 
                 toast.loading('Challenge creation confirmed...', { id: 'create-challenge' });
