@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
 import { base } from 'viem/chains';
 import { SaveUpVault_ABI } from '@/lib/contracts/abis/SaveUpVault';
+import { getContractAddress } from '@/lib/contracts';
 
-const VAULT_ADDRESS = '0x123456789abcdef123456789abcdef123456789a' as `0x${string}`; // Replace with actual vault address
+const VAULT_ADDRESS = getContractAddress(base.id, 'SaveUpVault'); // '0x123456789abcdef123456789abcdef123456789a' as `0x${string}`; // Replace with actual vault address
 
 export async function GET(
   request: NextRequest,
@@ -34,7 +35,7 @@ export async function GET(
     // Get user's progress for the challenge
     // The getUserProgress function returns [contribution, target]
     const progress = await publicClient.readContract({
-      address: VAULT_ADDRESS,
+      address: VAULT_ADDRESS as `0x${string}`,
       abi: SaveUpVault_ABI,
       functionName: 'getUserProgress',
       args: [BigInt(challengeId), formattedUserAddress],

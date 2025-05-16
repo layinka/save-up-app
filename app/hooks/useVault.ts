@@ -83,9 +83,9 @@ export function useVault(): UseVaultReturn {
   
   
   // Write contracts
-  const { data: approveHash, writeContract: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
-  const { data: depositHash, writeContract: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
-  const { data: challengeHash, writeContract: createChallengeToVault, isPending: isChallengePending, isError: isChallengeError } = useWriteContract();
+  const { data: approveHash, writeContractAsync: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
+  const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
+  const { data: challengeHash, writeContractAsync: createChallengeToVault, isPending: isChallengePending, isError: isChallengeError } = useWriteContract();
   
   // Transaction receipts
   const { isLoading: isApproveLoading } = useWaitForTransactionReceipt({
@@ -127,7 +127,7 @@ export function useVault(): UseVaultReturn {
     try {
       const amountInWei = parseUnits(amount, USDT_DECIMALS);
       
-      approveUsdt({
+      await approveUsdt({
         address: usdtAddress,
         abi: IERC20_ABI,
         functionName: 'approve',
@@ -145,7 +145,7 @@ export function useVault(): UseVaultReturn {
     try {
       const amountInWei = parseUnits(amount, USDT_DECIMALS);
       
-      depositToVault({
+      let tx = await depositToVault({
         address: vaultAddress,
         abi: SaveUpVault_ABI,
         functionName: 'contribute',
