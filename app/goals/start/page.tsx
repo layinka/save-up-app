@@ -16,7 +16,7 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export default function StartGoalPage() {
   const { context } = useMiniKit();
   const publicClient = usePublicClient()
-  const { createChallenge, isChallengeLoading, challengeHash, challengeReceipt, isChallengeSuccess } = useVault();
+  const { createChallenge, isChallengeLoading, challengeHash } = useVault();
   
   const [amount, setAmount] = useState(100);
   const [duration, setDuration] = useState(1);
@@ -143,12 +143,12 @@ export default function StartGoalPage() {
               setIsCreatingChallenge(false);
             }
           }}
-          disabled={isChallengeLoading || isCreatingChallenge || !challengeReceipt}
+          disabled={isChallengeLoading || isCreatingChallenge }
         >
-          {isChallengeLoading || isCreatingChallenge || !challengeReceipt ? (
+          {isChallengeLoading || isCreatingChallenge  ? (
             <span className="flex items-center justify-center">
               <span className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-              {challengeReceipt ? 'Challenge Created!' : 'Creating Challenge...'}
+              {challengeHash ? 'Challenge Created!' : 'Creating Challenge...'}
             </span>
           ) : (
             'Continue'

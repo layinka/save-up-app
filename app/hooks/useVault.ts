@@ -34,8 +34,8 @@ interface UseVaultReturn {
   isChallengeError: boolean;
   createChallenge: (name: string, targetAmount: string, durationInMonths: number) => Promise<Address| undefined | null|void>;
   challengeHash: Address | undefined;
-  challengeReceipt?: TransactionReceipt;
-  isChallengeSuccess?: boolean;
+  // challengeReceipt?: TransactionReceipt;
+  // isChallengeSuccess?: boolean;
   getUserProgress: (challengeId: number, userAddress?: string) => Promise<{ contribution: string; target: string }>;
   allowanceData: string;
   approveHash: Address | undefined;
@@ -90,18 +90,18 @@ export function useVault(): UseVaultReturn {
   const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
   const { data: challengeHash, writeContractAsync: createChallengeToVault, isPending: isChallengePending, isError: isChallengeError } = useWriteContract();
   
-  // Transaction receipts
-  const { isLoading: isApproveLoading, data: approveReceipt } = useWaitForTransactionReceipt({
-    hash: approveHash,
-  });
+  // // Transaction receipts
+  // const { isLoading: isApproveLoading, data: approveReceipt } = useWaitForTransactionReceipt({
+  //   hash: approveHash,
+  // });
   
-  const { isLoading: isDepositLoading, data: depositReceipt } = useWaitForTransactionReceipt({
-    hash: depositHash,
-  });
+  // const { isLoading: isDepositLoading, data: depositReceipt } = useWaitForTransactionReceipt({
+  //   hash: depositHash,
+  // });
   
-  const { isLoading: isChallengeLoading, data: challengeReceipt, isSuccess: isChallengeSuccess } = useWaitForTransactionReceipt({
-    hash: challengeHash,
-  });
+  // const { isLoading: isChallengeLoading, data: challengeReceipt, isSuccess: isChallengeSuccess } = useWaitForTransactionReceipt({
+  //   hash: challengeHash,
+  // });
   
   // Update balances when data changes
   useEffect(() => {
@@ -119,10 +119,15 @@ export function useVault(): UseVaultReturn {
   }, [vaultBalanceData, usdtBalanceData, allowanceData]);
   
   // Update loading state
-  useEffect(() => {
-    setIsLoading(isApprovePending || isApproveLoading || isDepositPending || isDepositLoading || isChallengePending || isChallengeLoading);
-  }, [isApprovePending, isApproveLoading, isDepositPending, isDepositLoading, isChallengePending, isChallengeLoading]);
+  // useEffect(() => {
+  //   setIsLoading(isApprovePending || isApproveLoading || isDepositPending || isDepositLoading || isChallengePending || isChallengeLoading);
+  // }, [isApprovePending, isApproveLoading, isDepositPending, isDepositLoading, isChallengePending, isChallengeLoading]);
   
+  useEffect(() => {
+    setIsLoading(isApprovePending  || isDepositPending  || isChallengePending );
+  }, [isApprovePending, isDepositPending, isChallengePending]);
+  
+
   // Approve USDT spending
   const approveUsdtSpending = useCallback(async (amount: string) => {
     if (!address) return;
@@ -249,13 +254,13 @@ export function useVault(): UseVaultReturn {
     approveUsdtSpending,
     deposit,
     withdraw,
-    isApproveLoading: isApprovePending || isApproveLoading,
-    isDepositLoading: isDepositPending || isDepositLoading,
-    isChallengeLoading: isChallengePending || isChallengeLoading,
+    isApproveLoading: isApprovePending ,
+    isDepositLoading: isDepositPending ,
+    isChallengeLoading: isChallengePending ,
     createChallenge,
     challengeHash,
-    challengeReceipt,
-    isChallengeSuccess,
+    // challengeReceipt,
+    // isChallengeSuccess,
     getUserProgress,
     allowanceData: allowanceData ? formatUnits(allowanceData as bigint, USDT_DECIMALS) : '0',
     approveHash,
