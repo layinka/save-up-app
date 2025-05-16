@@ -63,10 +63,12 @@ export default function StartGoalPage() {
             try {
               const challengeName = `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`;
               const tx = await createChallenge(challengeName, amount.toString(), duration);
-              
+              console.log('Hash: ', tx, 'publicClient', publicClient)
               if (tx && publicClient) {
+                console.log('Waiting for transaction receipt...')
                 // Explicitly wait for transaction receipt
                 const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+                console.log('Transaction receipt received:', receipt)
                 
                 toast.loading('Challenge creation confirmed...', { id: 'create-challenge' });
 
@@ -100,6 +102,7 @@ export default function StartGoalPage() {
                   })
                   .find((args) => args !== null);
 
+                console.log('Challenge event:', challengeEvent)
                 // Save challenge to database
                 if (challengeEvent) {
                   const response = await fetch('/api/challenges', {
