@@ -34,6 +34,7 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       address: usdtAddress,
       abi: erc20Abi,
       functionName: 'allowance',
+      chainId: 8453,
       // @ts-ignore - TypeScript expects a readonly array with 1 element, but we need 2 elements
       args:  [address as Address, vaultAddress] ,
       // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
@@ -43,7 +44,8 @@ export function DepositDialog({ isOpen, onClose, challengeId, challengeAmount, c
       address: usdtAddress,
       abi: erc20Abi,
       functionName: 'balanceOf',
-      args: [address as Address] 
+      args: [address as Address] ,
+      chainId: 8453,
       // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
       // enabled: !!address,
   });
