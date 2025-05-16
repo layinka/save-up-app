@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
-import { parseUnits, formatUnits, Address, erc20Abi } from 'viem';
+import { parseUnits, formatUnits, Address, erc20Abi, TransactionReceipt } from 'viem';
 import { SaveUpVault_ABI, IERC20_ABI, getContractAddress } from '@/lib/contracts';
 import { useMiniKit } from '@coinbase/onchainkit/minikit';
 import { baseSepolia } from 'viem/chains';
@@ -22,20 +22,23 @@ interface UseVaultReturn {
   usdtBalance: string;
   isApproved: boolean;
   isLoading: boolean;
-  approveHash: Address | undefined;
-  depositHash: Address | undefined;
   approveUsdtSpending: (amount: string) => Promise<void>;
   deposit: (challengeId: number, amount: string) => Promise<void>;
+  depositReceipt?: TransactionReceipt;
+  depositHash?: Address;
   isApproveLoading: boolean;
-  isApproveError: boolean;
   isDepositLoading: boolean;
-  isDepositError: boolean;
   isChallengeLoading: boolean;
+  isApproveError: boolean;
+  isDepositError: boolean;
   isChallengeError: boolean;
   createChallenge: (name: string, targetAmount: string, durationInMonths: number) => Promise<Address| undefined | null|void>;
   challengeHash: Address | undefined;
+  challengeReceipt?: TransactionReceipt;
+  isChallengeSuccess?: boolean;
   getUserProgress: (challengeId: number, userAddress?: string) => Promise<{ contribution: string; target: string }>;
   allowanceData: string;
+  approveHash: Address | undefined;
   withdraw: (challengeId: number) => Promise<`0x${string}` | undefined>;
 }
 
@@ -88,15 +91,15 @@ export function useVault(): UseVaultReturn {
   const { data: challengeHash, writeContractAsync: createChallengeToVault, isPending: isChallengePending, isError: isChallengeError } = useWriteContract();
   
   // Transaction receipts
-  const { isLoading: isApproveLoading } = useWaitForTransactionReceipt({
+  const { isLoading: isApproveLoading, data: approveReceipt } = useWaitForTransactionReceipt({
     hash: approveHash,
   });
   
-  const { isLoading: isDepositLoading } = useWaitForTransactionReceipt({
+  const { isLoading: isDepositLoading, data: depositReceipt } = useWaitForTransactionReceipt({
     hash: depositHash,
   });
   
-  const { isLoading: isChallengeLoading } = useWaitForTransactionReceipt({
+  const { isLoading: isChallengeLoading, data: challengeReceipt, isSuccess: isChallengeSuccess } = useWaitForTransactionReceipt({
     hash: challengeHash,
   });
   
@@ -192,7 +195,7 @@ export function useVault(): UseVaultReturn {
   // Create a challenge in the vault
   const createChallenge = useCallback(async (name: string, targetAmount: string, durationInMonths: number) => {
     console.log('Creating challenge with name:', name, address);
-    if (!address) return ;
+    if (!address) return;
     
     console.log('Creating challenge with target amount:', targetAmount);
     console.log('Creating challenge with duration in months:', durationInMonths);
@@ -211,11 +214,11 @@ export function useVault(): UseVaultReturn {
         functionName: 'createChallenge',
         args: [name, targetAmountInWei, endDate],
       });
-      
+      console.log('Creating challenge tx:', tx);
       return tx;
     } catch (error) {
       console.error('Error creating challenge:', error);
-      return null;
+      throw error;  // Rethrow to allow caller to handle
     }
   }, [address, createChallengeToVault, vaultAddress]);
 
@@ -251,6 +254,8 @@ export function useVault(): UseVaultReturn {
     isChallengeLoading: isChallengePending || isChallengeLoading,
     createChallenge,
     challengeHash,
+    challengeReceipt,
+    isChallengeSuccess,
     getUserProgress,
     allowanceData: allowanceData ? formatUnits(allowanceData as bigint, USDT_DECIMALS) : '0',
     approveHash,

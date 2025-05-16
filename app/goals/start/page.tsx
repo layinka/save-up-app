@@ -16,17 +16,17 @@ const isDevelopment = process.env.NODE_ENV === 'development';
 export default function StartGoalPage() {
   const { context } = useMiniKit();
   const publicClient = usePublicClient()
-  const { createChallenge, isChallengeLoading, challengeHash, challengeReceipt } = useVault();
+  const { createChallenge, isChallengeLoading, challengeHash, challengeReceipt, isChallengeSuccess } = useVault();
   
   const [amount, setAmount] = useState(100);
   const [duration, setDuration] = useState(1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isCreatingChallenge, setIsCreatingChallenge] = useState(false);
   
-  // Wait for transaction receipt
-  const { isLoading: isTransactionPending, isSuccess: isTransactionSuccess , data: transactionReceipt} = useWaitForTransactionReceipt({
-    hash: challengeHash,
-  });
+  // // Wait for transaction receipt
+  // const { isLoading: isTransactionPending, isSuccess: isTransactionSuccess , data: transactionReceipt} = useWaitForTransactionReceipt({
+  //   hash: challengeHash,
+  // });
 
   const handleSave = (newAmount: number, newDuration: number) => {
     setAmount(newAmount);
@@ -59,107 +59,80 @@ export default function StartGoalPage() {
               return;
             }
 
-            // Set loading state
             setIsCreatingChallenge(true);
-            
             try {
-              // Step 1: Create the challenge on the blockchain
-              const challengeName = `Save $${amount}`;
-              const targetAmount = amount.toString();
+              const challengeName = `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`;
+              const tx = await createChallenge(challengeName, amount.toString(), duration);
               
-              // Call the createChallenge function from useVault
-              const tx = await createChallenge(challengeName, targetAmount, duration);
-              
-              if (!tx) {
-                throw new Error('Failed to create challenge on blockchain');
-              }
-              
-              // Wait for transaction to be mined
-              toast.loading('Creating challenge on blockchain...', {
-                id: 'create-challenge',
-              });
-              
-              // Wait for transaction receipt
-              if (!isTransactionSuccess) {
-                await new Promise((resolve) => {
-                  const interval = setInterval(() => {
-                    if (isTransactionSuccess) {
-                      clearInterval(interval);
-                      resolve(true);
-                    }
-                  }, 1000);
-                });
-              }
+              if (tx && publicClient) {
+                // Explicitly wait for transaction receipt
+                const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
+                
+                toast.loading('Challenge creation confirmed...', { id: 'create-challenge' });
 
-              const challengeCreatedABI = [
-                {
-                  type: 'event',
-                  name: 'ChallengeCreated',
-                  inputs: [
-                    { name: 'id', type: 'uint256', indexed: true },
-                    { name: 'creator', type: 'address', indexed: true },
-                    { name: 'targetAmount', type: 'uint256', indexed: false },
-                    { name: 'endTime', type: 'uint256', indexed: false }
-                  ]
-                }
-              ] as const
-              // Extract the ChallengeCreated event
-              const challengeEvent = transactionReceipt?.logs
-                .map((log) => {
-                  try {
-                    const decoded = decodeEventLog({
-                      abi: challengeCreatedABI,
-                      data: log.data,
-                      topics: log.topics
-                    })
-                    return decoded.eventName === 'ChallengeCreated' ? decoded.args : null
-                  } catch {
-                    return null
+                // Define ChallengeCreated event ABI
+                const challengeCreatedABI = [
+                  {
+                    type: 'event',
+                    name: 'ChallengeCreated',
+                    inputs: [
+                      { name: 'id', type: 'uint256', indexed: true },
+                      { name: 'creator', type: 'address', indexed: true },
+                      { name: 'targetAmount', type: 'uint256', indexed: false },
+                      { name: 'endTime', type: 'uint256', indexed: false }
+                    ]
                   }
-                })
-                .find((args) => args !== null)
+                ] as const;
 
-              console.log('ChallengeCreated Event Args:', challengeEvent)
-              
-              toast.success('Challenge created on blockchain!', {
-                id: 'create-challenge',
-                duration: 3000,
-              });
-              
-              // Step 2: Save the challenge to the database
-              const response = await fetch('/api/challenges', {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
-                },
-                body: JSON.stringify({
-                  challengeId: challengeEvent?.id,
-                  creatorFid: context?.user?.fid?.toString(),
-                  username: context?.user?.username,
-                  displayName: context?.user?.displayName,
-                  profilePictureUrl: context?.user?.pfpUrl,
-                  name: challengeName,
-                  description: `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`,
-                  goalAmount: amount,
-                  targetDate: new Date(Date.now() + duration * 30 * 24 * 60 * 60 * 1000).toISOString(),
-                  transactionHash: tx,
-                }),
-              });
+                // Extract challenge ID from transaction receipt
+                const challengeEvent = receipt.logs
+                  .map((log) => {
+                    try {
+                      const decoded = decodeEventLog({
+                        abi: challengeCreatedABI,
+                        data: log.data,
+                        topics: log.topics
+                      });
+                      return decoded.eventName === 'ChallengeCreated' ? decoded.args : null;
+                    } catch {
+                      return null;
+                    }
+                  })
+                  .find((args) => args !== null);
 
-              if (!response.ok) {
-                throw new Error('Failed to save challenge to database');
+                // Save challenge to database
+                if (challengeEvent) {
+                  const response = await fetch('/api/challenges', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...(context?.user?.fid ? { 'fid': context.user.fid.toString() } : {}),
+                    },
+                    body: JSON.stringify({
+                      challengeId: challengeEvent.id,
+                      creatorFid: context?.user?.fid?.toString(),
+                      username: context?.user?.username,
+                      displayName: context?.user?.displayName,
+                      profilePictureUrl: context?.user?.pfpUrl,
+                      name: challengeName,
+                      description: `Save $${amount} in ${duration} month${duration > 1 ? 's' : ''}`,
+                      goalAmount: amount,
+                      targetDate: new Date(Date.now() + duration * 30 * 24 * 60 * 60 * 1000).toISOString(),
+                      transactionHash: tx,
+                    }),
+                  });
+
+                  if (response.ok) {
+                    const challenge = await response.json();
+                    toast.success('Challenge saved successfully!', { duration: 3000 });
+                    window.location.href = `/goals/progress/${challenge.id}`;
+                  } else {
+                    toast.error('Failed to save challenge to database');
+                  }
+                }
+              }else{
+                toast.error('Failed to create challenge');
               }
-
-              // Get the challenge ID from the response
-              const challenge = await response.json();
-              
-              toast.success('Challenge saved successfully!', {
-                duration: 3000,
-              });
-              
-              // Navigate to the challenge page
-              window.location.href = `/goals/progress/${challenge.id}`;
             } catch (error) {
               console.error('Error creating challenge:', error);
               toast.error(`Failed to create challenge. ${error instanceof Error ? error.message : 'Unknown error'}`, {
@@ -170,12 +143,12 @@ export default function StartGoalPage() {
               setIsCreatingChallenge(false);
             }
           }}
-          disabled={isChallengeLoading || isCreatingChallenge || isTransactionPending}
+          disabled={isChallengeLoading || isCreatingChallenge || !challengeReceipt}
         >
-          {isChallengeLoading || isCreatingChallenge || isTransactionPending ? (
+          {isChallengeLoading || isCreatingChallenge || !challengeReceipt ? (
             <span className="flex items-center justify-center">
               <span className="mr-2 h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"></span>
-              Creating Challenge...
+              {challengeReceipt ? 'Challenge Created!' : 'Creating Challenge...'}
             </span>
           ) : (
             'Continue'
