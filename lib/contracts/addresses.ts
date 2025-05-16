@@ -12,8 +12,8 @@ export const CONTRACT_ADDRESSES: ContractAddresses = {
   },
   // Add other networks when deploying
   8453: { // Base
-    USDT: '0x...',
-    SaveUpVault: '0x...'
+    USDT: '0xA253F38547A0A702EB4aB22A5564Be317b9a7eB7',
+    SaveUpVault: '0xeB09dCD136A0f3558Dd222a942A94a28df748f7f'
   },
   84532: { // Base Sepolia
     USDT: '0x74095AFf830Ebe635760B73fa4A7bFD18B8F6658',

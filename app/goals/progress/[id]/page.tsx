@@ -15,6 +15,7 @@ import { useAccount, useReadContract } from 'wagmi';
 import { SaveUpVault_ABI } from '@/lib/contracts';
 import { vaultAddress } from '@/app/utils/chain-details';
 import { useUserProgress } from '@/app/hooks/useUserProgress';
+import sdk from '@farcaster/frame-sdk';
 
 interface Participant {
   fid: number;
@@ -29,6 +30,7 @@ interface Challenge {
   name: string;
   description: string;
   goalAmount: number;
+  targetDate: Date;
   currentAmount: number;
   participants: Participant[];
 }
@@ -150,12 +152,22 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
         </h1>
 
         {/* Invite Buttons */}
-        <div className="grid grid-cols-1  gap-4 mb-8">
+        <div className="grid grid-cols-2  gap-4 mb-8">
           <button
             onClick={() => setIsInviteLinkDialogOpen(true)}
             className="p-4 bg-white rounded-full shadow-lg border-2 border-[#FCA311] text-[#333333] font-medium hover:bg-[#FCA311] hover:text-white transition-colors duration-200"
           >
             Challenge a Friend!
+          </button>
+
+          <button
+            onClick={async () => await sdk.actions.composeCast({ 
+              text: `"Savings mode activated! I'm challenging myself to save ${challenge.goalAmount} by ${challenge.targetDate}. Who's with me? #SavingsChallenge #FinancialFreedom"`,
+              embeds: [],
+            })}
+            className="p-4 bg-white rounded-full shadow-lg border-2 border-[#FCA311] text-[#333333] font-medium hover:bg-[#FCA311] hover:text-white transition-colors duration-200"
+          >
+            Share to Feed!
           </button>
         </div>
 

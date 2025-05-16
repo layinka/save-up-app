@@ -19,6 +19,7 @@ import {
   TransactionStatus,
 } from "@coinbase/onchainkit/transaction";
 import { useNotification } from "@coinbase/onchainkit/minikit";
+import { getDefaultAvatarImage } from "@/lib/utils";
 
 type ButtonProps = {
   children: ReactNode;
@@ -344,16 +345,22 @@ export function Home({}: HomeProps) {
             <div className="space-y-1">
               <div className="w-16 h-16 bg-[#00C896] rounded-full flex items-center justify-center mx-auto">
                 <span className="text-2xl">💰</span>
+                <img
+                  src={context?.user?.pfpUrl || getDefaultAvatarImage(context?.user?.fid??'')}
+                  alt={context?.user?.displayName}
+                  width={48}
+                  height={48}
+                  className="rounded-full" />
               </div>
               <h2 className="text-xl font-bold text-[#333333]">
-                {getUserDisplayName('SaveUp User')}
+              {context?.user?.displayName} {/* {getUserDisplayName('SaveUp User')}  */}
               </h2>
-              <p className="text-sm text-[#14213D]">
-                {formatAddress(user.address)}
-              </p>
-              <p className="text-xs text-[#14213D] opacity-70">
+              {/* <p className="text-sm text-[#14213D]">
+              {context?.user?.username} {formatAddress(user.address)}
+              </p> */}
+              {/* <p className="text-xs text-[#14213D] opacity-70">
                 Last active: {new Date(user.lastSaved || user.timestamp || '').toLocaleString()}
-              </p>
+              </p> */}
             </div>
           ) : isFrameReady 
               && !isAuthenticated ? 

@@ -8,6 +8,8 @@ import { useVault } from '@/app/hooks/useVault';
 import { usePublicClient, useWaitForTransactionReceipt } from 'wagmi';
 import { toast } from 'react-hot-toast';
 import { decodeEventLog } from 'viem';
+import Link  from 'next/link';
+import { BottomNavBar } from '@/app/components/BottomNavBar';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
@@ -179,14 +181,31 @@ export default function StartGoalPage() {
             'Continue'
           )}
         </Button>
+
+        <Link href="/landing" className={`w-full mt-6`}>
+          <button className="w-full max-w-sm bg-[#D80806] hover:bg-[#c03035] text-white py-6 rounded-xl text-lg font-semibold shadow-lg">
+            
+
+            <span className="text-sm">Cancel</span>
+          </button>
+        </Link>
+
+        {/*Add a note to user to inform them that the first to reach target out of all participants will get 10% extra reward in SUP Token, and Others that reach the target will get 10 SUP Token*/}
+        <p className="text-sm text-[#00C896] mt-6 font-semibold">
+          🏆 Race to the Goal: Every winner earns 10 SUP, and the top performer gets 10% bonus SUP Extra!
+        </p>
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-gray-200 p-4">
+      <BottomNavBar activeTab="Mini-App" onNavClick={() => {}} />
+
+      {/* <nav className="bg-white border-t border-gray-200 p-4">
         <div className="flex justify-around items-center max-w-md mx-auto">
-          <button className="flex flex-col items-center text-[#14213D] opacity-50">
-            <span className="text-sm">Home</span>
-          </button>
+          <Link href="/landing" >
+            <button className="flex flex-col items-center text-[#14213D] opacity-50">
+              <span className="text-sm">Home</span>
+            </button>
+          </Link>
           <button className="flex flex-col items-center text-[#00C896]">
             <span className="text-sm font-medium">Mini-App</span>
             <div className="w-1 h-1 bg-[#00C896] rounded-full mt-1"></div>
@@ -195,7 +214,7 @@ export default function StartGoalPage() {
             <span className="text-sm">Profile</span>
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       {/* Savings Dialog */}
       <SavingsDialog
