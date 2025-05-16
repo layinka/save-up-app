@@ -30,7 +30,7 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
   const { context } = useMiniKit();
 
   const { data: approveHash, writeContractAsync: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
-  const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
+  const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError, error: depositError } = useWriteContract();
   
   const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
       address: usdtAddress,
@@ -197,7 +197,7 @@ export function DepositDialog({address, isOpen, onClose, challengeId, challengeA
       // If everything is successful, close the dialog
       onClose();
     } catch (error) {
-      console.error('Deposit error:', isDepositError, error);
+      console.error('Deposit error:', isDepositError, depositError, error);
       setError(error instanceof Error ? error.message : 'An unexpected error occurred');
     }
   };

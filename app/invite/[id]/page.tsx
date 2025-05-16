@@ -1,5 +1,6 @@
 'use client';
 
+import Head from 'next/head';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -30,6 +31,20 @@ interface Challenge {
 }
 
 export default function InvitePage({ params }: { params: { id: string } }) {
+  const frameData = {
+    version: 'next',
+    imageUrl: 'https://save-up-miniapp.vercel.app/logo.png',
+    button: {
+      title: '🚩 Join the Challenge',
+      action: {
+        type: 'launch_frame',
+        url: 'save-up-miniapp.vercel.app',
+        name: 'SaveUp!',
+        splashImageUrl: 'https://save-up-miniapp.vercel.app/logo.png',
+        splashBackgroundColor: '#f5f0ec'
+      }
+    }
+  };
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { writeContract, isSuccess } = useWriteContract();
@@ -72,9 +87,7 @@ export default function InvitePage({ params }: { params: { id: string } }) {
           fid: context.user.fid.toString(),
           username: context.user.username,
           displayName: context.user.displayName,
-          profilePictureUrl: context.user.pfpUrl,
-          
-        
+          profilePictureUrl: context.user.pfpUrl
         }),
       });
 
@@ -108,8 +121,15 @@ export default function InvitePage({ params }: { params: { id: string } }) {
   const inviter = challenge.participants.find(p => p.fid === challenge.creatorFid);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] p-6">
-      <div className="max-w-2xl mx-auto">
+    <>
+      <Head>
+        <meta
+          name="fc:frame"
+          content={JSON.stringify(frameData)}
+        />
+      </Head>
+      <div className="min-h-screen bg-[#F9FAFB] p-6">
+        <div className="max-w-2xl mx-auto">
         {/* Challenge Card */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
           <h1 className="text-2xl font-bold text-[#14213D] mb-2">
@@ -195,35 +215,11 @@ export default function InvitePage({ params }: { params: { id: string } }) {
                 fid={Number(participant.fid)}
                 currentAmount={participant.currentAmount}
               />
-              // <div
-              //   key={participant.fid}
-              //   className="flex items-center space-x-3 p-3 bg-[#F9FAFB] rounded-lg"
-              // >
-              //   <img
-              //     src={participant.pfpUrl?? getDefaultAvatarImage(participant.fid) }
-              //     alt={participant.username}
-              //     width={40}
-              //     height={40}
-              //     className="rounded-full"
-              //   />
-              //   <div>
-              //     <p className="font-medium text-[#14213D]">
-              //       {participant.displayName}
-              //     </p>
-              //     <p className="text-sm text-gray-500">
-              //       @{participant.username}
-              //     </p>
-              //   </div>
-                
-              //   <p className="ml-auto font-semibold text-[#00C896]">
-              //     ${participant.currentAmount.toLocaleString()}
-              //   </p>
-                
-              // </div>
             ))}
           </div>
         </div>
       </div>
     </div>
+   </>
   );
 }
