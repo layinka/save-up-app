@@ -17,6 +17,7 @@ import { vaultAddress } from '@/app/utils/chain-details';
 import { useUserProgress } from '@/app/hooks/useUserProgress';
 import sdk from '@farcaster/frame-sdk';
 import { format } from 'date-fns';
+import { BottomNavBar } from '@/app/components/BottomNavBar';
 
 interface Participant {
   fid: number;
@@ -197,19 +198,19 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
         {/* Progress Section */}
         <section className="mb-8 bg-white p-6 rounded-xl shadow-sm">
           <h2 className="text-lg font-semibold text-[#14213D] mb-4">Your Progress</h2>
-          {userContribution > 0 ? (
+          {challenge.currentAmount > 0 ? (
             <>
               <p className="text-2xl font-bold text-[#00C896] mb-2">
-                ${userContribution.toLocaleString()} Saved 
+                ${challenge.currentAmount.toLocaleString()} Saved 
               </p>
               <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-[#00C896] transition-all duration-500"
-                  style={{ width: `${Math.min(progressPercentage || 0, 100)}%` }}
+                  style={{ width: `${Math.min( (challenge.currentAmount / challenge.goalAmount) * 100, 100)}%` }}
                 />
               </div>
               <p className="text-sm text-gray-500 mt-2">
-                {progressPercentage ? `${progressPercentage.toFixed(2)}% of goal achieved` : 'Progress tracking'}
+                {`${Math.min( (challenge.currentAmount / challenge.goalAmount) * 100, 100).toFixed(2)}% of goal achieved`}
               </p>
               <p className="text-sm text-gray-600 mb-2">Target Date: {format(new Date(challenge.targetDate), 'MMM d, yyyy')}</p>
             </>
@@ -241,7 +242,9 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
       </main>
 
       {/* Bottom Navigation */}
-      <nav className="bg-white border-t border-gray-200 p-4">
+      <BottomNavBar activeTab={'Mini-App'} onNavClick={(tab) => {
+        }}   />
+      {/* <nav className="bg-white border-t border-gray-200 p-4">
         <div className="flex justify-around items-center max-w-md mx-auto">
           <button className="flex flex-col items-center text-[#14213D] opacity-50">
             <span className="text-sm">Home</span>
@@ -254,7 +257,7 @@ export default function ChallengeProgressPage({ params }: { params: { id: number
             <span className="text-sm">Profile</span>
           </button>
         </div>
-      </nav>
+      </nav> */}
 
       {/* Search Dialog */}
       <Dialog open={isInviteDialogOpen} onOpenChange={setIsInviteDialogOpen}>
