@@ -15,6 +15,7 @@ import { SaveUpVault_ABI } from '@/lib/contracts';
 import { formatUnits } from 'viem';
 import { useVault } from '../hooks/useVault';
 import { useMiniKit } from '@coinbase/onchainkit/minikit';
+import { useRouter } from 'next/navigation';
 
 // Type definition for the data structure coming from the API (matches db/schema.ts)
 type ChallengeFromAPI = {
@@ -33,6 +34,7 @@ type ChallengeFromAPI = {
 // Keep the main LandingPage component structure
 const LandingPage: React.FC = () => {
   const { context } = useMiniKit();
+  const router = useRouter();
   // State for challenges, loading, and errors
   const [challenges, setChallenges] = useState<ChallengeCardProps[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -94,7 +96,8 @@ const LandingPage: React.FC = () => {
     console.log(`Challenge ${id} clicked`);
 
     // TODO: Navigate to challenge details page using the challenge ID (which is now string)
-    window.location.href= `/goals/progress/${id}`;
+    // window.location.href= `/goals/progress/${id}`;
+    router.push(`/goals/progress/${id}`);
   };
 
   const handleActionClick = async (action: string) => {

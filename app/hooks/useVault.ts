@@ -40,6 +40,9 @@ interface UseVaultReturn {
   allowanceData: string;
   approveHash: Address | undefined;
   withdraw: (challengeId: number) => Promise<`0x${string}` | undefined>;
+  withdrawHash?: Address;
+  isWithdrawLoading: boolean;
+  isWithdrawError: boolean;
 }
 
 export function useVault(): UseVaultReturn {
@@ -55,7 +58,7 @@ export function useVault(): UseVaultReturn {
  
   
   // Read contracts
-  const { data: vaultBalanceData } = useReadContract({
+  const { data: vaultBalanceData, refetch: refetchVaultBalance } = useReadContract({
     address: vaultAddress,
     abi: SaveUpVault_ABI,
     functionName: 'balanceOf',
@@ -64,16 +67,16 @@ export function useVault(): UseVaultReturn {
     enabled: !!address,
   });
   
-  const { data: usdtBalanceData } = useReadContract({
+  const { data: usdtBalanceData ,refetch: refetchUsdtBalance} = useReadContract({
     address: usdtAddress,
-    abi: IERC20_ABI,
+    abi: erc20Abi,
     functionName: 'balanceOf',
     args: address ? [address as Address] : undefined,
     // @ts-ignore - enabled is valid but TypeScript doesn't recognize it
     enabled: !!address,
   });
   
-  const { data: allowanceData } = useReadContract({
+  const { data: allowanceData, refetch: refetchAllowance } = useReadContract({
     address: usdtAddress,
     abi: erc20Abi,
     functionName: 'allowance',
@@ -89,6 +92,7 @@ export function useVault(): UseVaultReturn {
   const { data: approveHash, writeContractAsync: approveUsdt, isPending: isApprovePending, isError: isApproveError } = useWriteContract();
   const { data: depositHash, writeContractAsync: depositToVault, isPending: isDepositPending, isError: isDepositError } = useWriteContract();
   const { data: challengeHash, writeContractAsync: createChallengeToVault, isPending: isChallengePending, isError: isChallengeError } = useWriteContract();
+  const { data: withdrawHash, writeContractAsync: withdrawFromVault, isPending: isWithdrawPending, isError: isWithdrawError } = useWriteContract();
   
   // // Transaction receipts
   // const { isLoading: isApproveLoading, data: approveReceipt } = useWaitForTransactionReceipt({
@@ -116,7 +120,13 @@ export function useVault(): UseVaultReturn {
     if (allowanceData) {
       setIsApproved(Number(allowanceData) > 0);
     }
-  }, [vaultBalanceData, usdtBalanceData, allowanceData]);
+  }, [vaultBalanceData, usdtBalanceData, allowanceData, approveHash]);
+
+  useEffect(() => {
+    refetchVaultBalance();
+    refetchUsdtBalance();
+    refetchAllowance();
+  }, [approveHash, depositHash, challengeHash, withdrawHash]);
   
   // Update loading state
   // useEffect(() => {
@@ -137,7 +147,7 @@ export function useVault(): UseVaultReturn {
       
       await approveUsdt({
         address: usdtAddress,
-        abi: IERC20_ABI,
+        abi: erc20Abi,
         functionName: 'approve',
         args: [vaultAddress, amountInWei],
       });
@@ -179,23 +189,6 @@ export function useVault(): UseVaultReturn {
     }
   }, [address]);
   
-  // Contribute to a challenge
-  const contributeToChallenge = useCallback(async (challengeId: number, amount: string) => {
-    if (!address) return;
-    
-    try {
-      const amountInWei = parseUnits(amount, USDT_DECIMALS);
-      
-      depositToVault({
-        address: vaultAddress,
-        abi: SaveUpVault_ABI,
-        functionName: 'contribute',
-        args: [BigInt(challengeId), amountInWei],
-      });
-    } catch (error) {
-      console.error('Error contributing to challenge:', error);
-    }
-  }, [address, depositToVault, vaultAddress]);
   
   // Create a challenge in the vault
   const createChallenge = useCallback(async (name: string, targetAmount: string, durationInMonths: number) => {
@@ -232,7 +225,7 @@ export function useVault(): UseVaultReturn {
     if (!address) return;
 
     try {
-      const tx = await depositToVault({
+      const tx = await withdrawFromVault({
         address: vaultAddress,
         abi: SaveUpVault_ABI,
         functionName: 'withdrawFromChallenge',
@@ -244,7 +237,7 @@ export function useVault(): UseVaultReturn {
       console.error('Error withdrawing from challenge:', error);
       throw error;
     }
-  }, [address, depositToVault, vaultAddress]);
+  }, [address, withdrawFromVault, vaultAddress]);
   
   return {
     vaultBalance,
@@ -254,6 +247,7 @@ export function useVault(): UseVaultReturn {
     approveUsdtSpending,
     deposit,
     withdraw,
+    isWithdrawLoading: isWithdrawPending,
     isApproveLoading: isApprovePending ,
     isDepositLoading: isDepositPending ,
     isChallengeLoading: isChallengePending ,
@@ -265,8 +259,10 @@ export function useVault(): UseVaultReturn {
     allowanceData: allowanceData ? formatUnits(allowanceData as bigint, USDT_DECIMALS) : '0',
     approveHash,
     depositHash,
+    withdrawHash,
     isApproveError,
     isDepositError,
     isChallengeError,
+    isWithdrawError,
   };
 }
