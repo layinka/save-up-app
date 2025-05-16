@@ -12,11 +12,13 @@ import Link  from 'next/link';
 import { BottomNavBar } from '@/app/components/BottomNavBar';
 import { base } from 'viem/chains';
 import { sleep } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
 export default function StartGoalPage() {
   const { context } = useMiniKit();
+  const router = useRouter();
   const publicClient = usePublicClient({
     chainId: base.id,
   })
@@ -96,7 +98,7 @@ export default function StartGoalPage() {
                 if (response.ok) {
                   const challenge = await response.json();
                   toast.success('Challenge Created successfully!', { duration: 3000 });
-                  window.location.href = `/goals/progress/${challenge.id}`;
+                  router.push(`/goals/progress/${challenge.id}`);
                 } else {
                   toast.error('Failed to Create challenge');
                 }
